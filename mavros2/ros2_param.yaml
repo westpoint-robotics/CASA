@@ -10,5 +10,19 @@ mavros_node:
 
 /**:
   ros__parameters:
-    plugin_denylist: [odometry]
+    plugin_denylist: [odometry,
+    		     wheel_odometry,
+		     image_pub,
+		     vibration,
+		     distance_sensor,
+		     rangefinder,
+		     wind_estimation,
+		     vision_pose,
+		     vision_speed,
+		     vfr_hud,
+		     camera,
+		     cellular_status,
+		     cam_imu_sync,
+		     fake_gps,
+		     gps_rtk]
     # plugin_allowlist: []
