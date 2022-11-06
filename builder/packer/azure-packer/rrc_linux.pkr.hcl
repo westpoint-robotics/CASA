@@ -1,9 +1,9 @@
 source "azure-arm" "swarm2_001" {
   use_interactive_auth = "true"
-  resource_group_name  = "EECS-RRC"
+  resource_group_name  = "SomeRG"
   storage_account      = "swarm002builds"
-  subscription_id      = "139d1fac-0e90-4718-84e5-88b774195742"
-  tenant_id            = "99ff8811-3517-40a9-bf10-45ea0a321f0b"
+  subscription_id      = "69b4a217-b85d-4344-95fc-cf86efa2768c"
+  tenant_id            = "ea151704-9fd0-454d-887f-6e418cd14cf3"
 
   capture_container_name = "images"
   capture_name_prefix    = "packer"
