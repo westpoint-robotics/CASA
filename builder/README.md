@@ -16,3 +16,13 @@ This folder contains details on how to build base images for CASA.  This include
 
 If you just want the output from this tool, please see the RRC Release Folder.
 
+## Releases
+
+### 0.1
+
+  * Add chrome & firefox
+  * Add gazibo
+
+### 0
+
+Initial
