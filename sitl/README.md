@@ -3,6 +3,7 @@
 - [CASA Software in the Loop Simulation (SITL)](#casa-software-in-the-loop-simulation-sitl)
   - [Overview](#overview)
   - [Requirements](#requirements)
+  - [References](#references)
   - [Usage](#usage)
     - [Starting the simulator](#starting-the-simulator)
   - [Connecting  with QGroundControl](#connecting--with-qgroundcontrol)
@@ -24,6 +25,12 @@ For now, we are using version 1.13.0 of the `px4-gazebo-headless` container.  In
   * Docker
   * QGroundControl (optional)
   * ROS2 (optional)
+
+
+## References
+
+   * [MAVSDK](http://mavsdk-python-docs.s3-website.eu-central-1.amazonaws.com/index.html) : MAVSDK API
+   * [rclpy](https://github.com/ros2/rclpy) : ROS Client Library for the Python language.
 
 ## Usage
 
