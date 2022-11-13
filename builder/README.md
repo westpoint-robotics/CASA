@@ -2,8 +2,8 @@
 
 This folder contains details on how to build base images for CASA.  This includes
 
-   * *Deployable images*:  Headless images for deploying CASA on physical devices (NUC, ODroid, Raspberry, etc) as well as Virtual Machines (Azure, VMWare)
-   * *Developer images*:  Desktop images with all components and tools to develop and use CASA; for students, teacher, researchers
+   * *Deployable images*:  Lighter, headless images for deploying CASA on physical devices (NUC, ODroid, Raspberry, etc) as well as Virtual Machines (Azure, VMWare).   For end devices running the CASA stack.
+   * *Developer images*:  Desktop images with all components and tools to develop and use CASA.  For students, teacher, researchers.
 
 
 ## Building
