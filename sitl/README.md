@@ -1,6 +1,6 @@
-# CASA Software in the Loop (SITL)
+# CASA Software in the Loop Simulation (SITL)
 
-- [CASA Software in the Loop (SITL)](#casa-software-in-the-loop-sitl)
+- [CASA Software in the Loop Simulation (SITL)](#casa-software-in-the-loop-simulation-sitl)
   - [Overview](#overview)
   - [Requirements](#requirements)
   - [Usage](#usage)
