@@ -78,7 +78,11 @@ build {
       "../setup_scripts/20_dev_python.sh",
       "../setup_scripts/25_dev_go.sh",
       "../setup_scripts/30_app_network.sh",      
-      "../setup_scripts/100_ubuntu_desktop.sh",            
+      "../setup_scripts/100_ubuntu_desktop.sh",    
+      "../setup_scripts/101_vmware_tools_desktop.sh",    
+      "../setup_scripts/103_docker.sh",            
+      "../setup_scripts/105_gazebo.sh",            
+      "../setup_scripts/110_browsers.sh",          
       "../setup_scripts/135_app_vscode.sh"
     ]
   }
