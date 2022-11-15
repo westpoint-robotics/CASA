@@ -1,0 +1,6 @@
+source;share/casa_startup/hook/pythonpath.ps1
+source;share/casa_startup/hook/pythonpath.dsv
+source;share/casa_startup/hook/pythonpath.sh
+source;share/casa_startup/hook/ament_prefix_path.ps1
+source;share/casa_startup/hook/ament_prefix_path.dsv
+source;share/casa_startup/hook/ament_prefix_path.sh

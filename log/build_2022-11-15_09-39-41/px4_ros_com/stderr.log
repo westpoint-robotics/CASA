@@ -1,0 +1,26 @@
+In file included from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/logging.hpp:24[m[K,
+                 from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/client.hpp:40[m[K,
+                 from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/callback_group.hpp:23[m[K,
+                 from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/any_executable.hpp:20[m[K,
+                 from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/memory_strategy.hpp:25[m[K,
+                 from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/memory_strategies.hpp:18[m[K,
+                 from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/executor_options.hpp:20[m[K,
+                 from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/executor.hpp:37[m[K,
+                 from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/executors/multi_threaded_executor.hpp:25[m[K,
+                 from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/executors.hpp:21[m[K,
+                 from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/rclcpp.hpp:155[m[K,
+                 from [01m[K/home/jason/CASA/src/communication/px4_ros_com/src/examples/advertisers/debug_vect_advertiser.cpp:41[m[K:
+[01m[K/home/jason/CASA/src/communication/px4_ros_com/src/examples/advertisers/debug_vect_advertiser.cpp:[m[K In lambda function:
+[01m[K/home/jason/CASA/src/communication/px4_ros_com/src/examples/advertisers/debug_vect_advertiser.cpp:62:57:[m[K [01;35m[Kwarning: [m[Kformat ‘[01m[K%llu[m[K’ expects argument of type ‘[01m[Klong long unsigned int[m[K’, but argument 5 has type ‘[01m[Kpx4_msgs::msg::DebugVect_<std::allocator<void> >::_timestamp_type[m[K’ {aka ‘[01m[Klong unsigned int[m[K’} [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wformat=-Wformat=]8;;[m[K]
+   62 |                         RCLCPP_INFO(this->get_logger(), [01;35m[K"\033[97m Publishing debug_vect: time: %llu x: %f y: %f z: %f \033[0m"[m[K,
+      |                                                         [01;35m[K^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[m[K
+   63 |                                     [32m[Kdebug_vect.timestamp[m[K, debug_vect.x, debug_vect.y, debug_vect.z);
+      |                                     [32m[K~~~~~~~~~~~~~~~~~~~~[m[K 
+      |                                                [32m[K|[m[K
+      |                                                [32m[Kpx4_msgs::msg::DebugVect_<std::allocator<void> >::_timestamp_type {aka long unsigned int}[m[K
+[01m[K/home/jason/CASA/src/communication/px4_ros_com/src/examples/advertisers/debug_vect_advertiser.cpp:62:99:[m[K [01;36m[Knote: [m[Kformat string is defined here
+   62 |                         RCLCPP_INFO(this->get_logger(), "\033[97m Publishing debug_vect: time: [01;36m[K%llu[m[K x: %f y: %f z: %f \033[0m",
+      |                                                                                                [01;36m[K~~~^[m[K
+      |                                                                                                   [01;36m[K|[m[K
+      |                                                                                                   [01;36m[Klong long unsigned int[m[K
+      |                                                                                                [32m[K%lu[m[K

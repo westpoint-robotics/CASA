@@ -1,0 +1,38 @@
+running egg_info
+creating ../../build/casa_startup/casa_startup.egg-info
+writing ../../build/casa_startup/casa_startup.egg-info/PKG-INFO
+writing dependency_links to ../../build/casa_startup/casa_startup.egg-info/dependency_links.txt
+writing requirements to ../../build/casa_startup/casa_startup.egg-info/requires.txt
+writing top-level names to ../../build/casa_startup/casa_startup.egg-info/top_level.txt
+writing manifest file '../../build/casa_startup/casa_startup.egg-info/SOURCES.txt'
+reading manifest file '../../build/casa_startup/casa_startup.egg-info/SOURCES.txt'
+writing manifest file '../../build/casa_startup/casa_startup.egg-info/SOURCES.txt'
+running build
+running build_py
+creating /home/jason/CASA/build/casa_startup/build
+creating /home/jason/CASA/build/casa_startup/build/lib
+creating /home/jason/CASA/build/casa_startup/build/lib/casa_startup
+copying casa_startup/__init__.py -> /home/jason/CASA/build/casa_startup/build/lib/casa_startup
+running install
+/usr/local/lib/python3.10/dist-packages/setuptools/command/install.py:34: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+  warnings.warn(
+running install_lib
+creating /home/jason/CASA/install/casa_startup/local
+creating /home/jason/CASA/install/casa_startup/local/lib
+creating /home/jason/CASA/install/casa_startup/local/lib/python3.10
+creating /home/jason/CASA/install/casa_startup/local/lib/python3.10/dist-packages
+creating /home/jason/CASA/install/casa_startup/local/lib/python3.10/dist-packages/casa_startup
+copying /home/jason/CASA/build/casa_startup/build/lib/casa_startup/__init__.py -> /home/jason/CASA/install/casa_startup/local/lib/python3.10/dist-packages/casa_startup
+byte-compiling /home/jason/CASA/install/casa_startup/local/lib/python3.10/dist-packages/casa_startup/__init__.py to __init__.cpython-310.pyc
+running install_data
+creating /home/jason/CASA/install/casa_startup/local/share
+creating /home/jason/CASA/install/casa_startup/local/share/ament_index
+creating /home/jason/CASA/install/casa_startup/local/share/ament_index/resource_index
+creating /home/jason/CASA/install/casa_startup/local/share/ament_index/resource_index/packages
+copying resource/casa_startup -> /home/jason/CASA/install/casa_startup/local/share/ament_index/resource_index/packages
+creating /home/jason/CASA/install/casa_startup/local/share/casa_startup
+copying package.xml -> /home/jason/CASA/install/casa_startup/local/share/casa_startup
+running install_egg_info
+Copying ../../build/casa_startup/casa_startup.egg-info to /home/jason/CASA/install/casa_startup/local/lib/python3.10/dist-packages/casa_startup-0.0.0-py3.10.egg-info
+running install_scripts
+writing list of installed files to '/home/jason/CASA/build/casa_startup/install.log'

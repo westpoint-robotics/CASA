@@ -1,0 +1,14 @@
+package.xml
+setup.cfg
+setup.py
+../../build/casa_startup/casa_startup.egg-info/PKG-INFO
+../../build/casa_startup/casa_startup.egg-info/SOURCES.txt
+../../build/casa_startup/casa_startup.egg-info/dependency_links.txt
+../../build/casa_startup/casa_startup.egg-info/requires.txt
+../../build/casa_startup/casa_startup.egg-info/top_level.txt
+../../build/casa_startup/casa_startup.egg-info/zip-safe
+casa_startup/__init__.py
+resource/casa_startup
+test/test_copyright.py
+test/test_flake8.py
+test/test_pep257.py
