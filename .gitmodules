@@ -4,3 +4,6 @@
 [submodule "src/communication/px4_msgs"]
 	path = src/communication/px4_msgs
 	url = https://github.com/PX4/px4_msgs
+[submodule "src/communication/micrortps_agent"]
+	path = src/communication/micrortps_agent
+	url = https://github.com/PX4/micrortps_agent
