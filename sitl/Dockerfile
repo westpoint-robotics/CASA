@@ -82,13 +82,13 @@ RUN ./ubuntu.sh
 
 WORKDIR /src/PX4-Autopilot
 RUN HEADLESS=1 make px4_sitl_default gazebo
-#RUN rm Tools/sitl_gazebo/models/iris/iris.sdf.jinja
-#RUN mv iris.sdf.jinja Tools/sitl_gazebo/models/iris/
-#RUN rm Tools/sitl_gazebo/worlds/iris_irlock.world
-#RUN mv iris_irlock.world Tools/sitl_gazebo/worlds/
-#RUN rm Tools/sitl_gazebo/models/iris_irlock/iris_irlock.sdf
-#RUN mv iris_irlock.sdf Tools/sitl_gazebo/models/iris_irlock/
-#UN HEADLESS=1 make px4_sitl_rtps gazebo
+RUN rm Tools/sitl_gazebo/models/iris/iris.sdf.jinja
+RUN mv iris.sdf.jinja Tools/sitl_gazebo/models/iris/
+RUN rm Tools/sitl_gazebo/worlds/iris_irlock.world
+RUN mv iris_irlock.world Tools/sitl_gazebo/worlds/
+RUN rm Tools/sitl_gazebo/models/iris_irlock/iris_irlock.sdf
+RUN mv iris_irlock.sdf Tools/sitl_gazebo/models/iris_irlock/
+RUN HEADLESS=1 make px4_sitl_rtps gazebo
 
 WORKDIR /
 
