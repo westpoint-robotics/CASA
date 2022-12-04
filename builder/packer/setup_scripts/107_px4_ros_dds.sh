@@ -4,6 +4,7 @@ sudo apt-get install -y libasio-dev libtinyxml2-dev
 sudo apt-get install -y libp11-dev libengine-pkcs11-openssl
 sudo apt-get install -y softhsm2
 sudo apt-get install -y openjdk-11-jdk-headless
+sudo apt-get install -y ros-humble-rviz2
 
 source /opt/ros/humble/setup.bash
 
@@ -68,3 +69,6 @@ colcon build
 # px4-offboard
 cd ~
 git clone https://github.com/Jaeyoung-Lim/px4-offboard.git
+cd px4-offboard
+source ../px4_ros_com_ws/install/setup.sh
+colcon build
