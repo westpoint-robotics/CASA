@@ -36,7 +36,7 @@ source "vmware-iso" "casa_gold_desktop" {
   headless      = false
   // Virtual Hardware Specs
   memory       = 8172
-  cpus         = 1
+  cpus         = 4
   cores        = 4
   disk_size    = 32000
   sound        = true
@@ -69,7 +69,7 @@ source "vmware-iso" "casa_gold_desktop" {
 build {
   sources = ["sources.vmware-iso.casa_gold_desktop"]
   provisioner "shell" {
-    timeout = "2h"
+    timeout = "3h"
     scripts = [
       "../setup_scripts/00_base.sh",
       "../setup_scripts/05_profile.sh",
@@ -81,9 +81,13 @@ build {
       "../setup_scripts/100_ubuntu_desktop.sh",    
       "../setup_scripts/101_vmware_tools_desktop.sh",    
       "../setup_scripts/103_docker.sh",            
-      "../setup_scripts/105_gazebo.sh",            
+      "../setup_scripts/105_gazebo.sh"    ,
+      "../setup_scripts/106_px4_autopilot.sh",    
+      "../setup_scripts/107_px4_ros_dds.sh",
       "../setup_scripts/110_browsers.sh",          
-      "../setup_scripts/135_app_vscode.sh"
+      "../setup_scripts/133_qgroundcontrol.sh",
+      "../setup_scripts/135_app_vscode.sh",
+      "../setup_scripts/900_upgrade.sh"
     ]
   }
 

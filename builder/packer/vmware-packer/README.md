@@ -70,13 +70,13 @@ packer validate .
 Then
 
 ```
-packer build -f <hcl file>
+packer build <hcl file>
 ```
 
 i.e.
 
 ```
-packer build -f swarm2_gold_headless_0x64_vmware.pkr.hcl
+packer build swarm2_gold_headless_0x64_vmware.pkr.hcl
 ```
 
 ## Wrapping up
@@ -108,12 +108,16 @@ echo 'MyP@ssw0rd-22!' | mkpasswd -m sha-512 --stdi
 
 ## TODO
 
-  * add VMWare tools
-  
+  * add PX4
+    * pip install kconfiglib
+    * install opencv-devel  
+    * sudo apt-get install libgstreamer-plugins-base1.0-dev gstreamer1.0-plugins-bad gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-ugly -y
+
+  * QGroundController
   * add ros rqt
 
     ```
-    sudo apt install ~nros-foxy-rqt*
+    sudo apt install ~nros-humble-rqt*
     ```
 
 ## Troubleshooting
