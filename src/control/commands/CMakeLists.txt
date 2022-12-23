@@ -15,6 +15,10 @@ find_package(rclpy REQUIRED)
 add_executable(takeoff src/takeoff.cpp)
 ament_target_dependencies(takeoff rclcpp px4_msgs)
 
+install(TARGETS
+  takeoff
+  DESTINATION lib/${PROJECT_NAME})
+
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   # the following line skips the linter which checks for copyrights
