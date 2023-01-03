@@ -24,10 +24,16 @@ class TakeoffControl : public rclcpp::Node
 public:
   TakeoffControl() : Node("takeoff_node")
   {
-    rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
-    auto qos = rclcpp::QoS(rclcpp::QoSInitialization(qos_profile.history, 10), qos_profile);
+    // set the Quality of Service
+    // RELIABILITY: best effort
+    // DURABILITY: transient local
+    // everything else is kept default
+    rclcpp::QoS qos(10);
+    qos.keep_last(10);
+    qos.best_effort();
+    qos.transient_local();
     
-    takeoff_pub_ = this->create_publisher<px4_msgs::msg::VehicleCommand>("/fmu/in/vehicle_command", 15.0);
+    takeoff_pub_ = this->create_publisher<px4_msgs::msg::VehicleCommand>("/fmu/in/vehicle_command", qos);
     sensor_sub_ = this->create_subscription<px4_msgs::msg::SensorGps>("/fmu/out/vehicle_gps_position", qos,
 								      std::bind(&TakeoffControl::gps_callback, this,
 										std::placeholders::_1));
@@ -36,7 +42,7 @@ public:
     auto timer_callback = [this]() -> void
     {
       //param7 is altitude
-      if (setpoint_counter_ <= 10)
+      if (setpoint_counter_ <= 1000)
       {
 	RCLCPP_INFO(this->get_logger(), "Sending takeoff command");
 	this -> publish_takeoff_command(px4_msgs::msg::VehicleCommand::VEHICLE_CMD_NAV_TAKEOFF, 10);
@@ -54,7 +60,7 @@ private:
 
   void gps_callback(const px4_msgs::msg::SensorGps & msg) const
   {
-    std::cout<< "in the callback";
+    RCLCPP_INFO(this->get_logger(), "in the callback");
   }
   
   rclcpp::TimerBase::SharedPtr timer_;
@@ -88,7 +94,7 @@ void TakeoffControl::publish_takeoff_command(uint16_t command, float alt)
   msg.command = command;
   msg.param5 = 41.390725;
   msg.param6 = -73.953215;
-  msg.param7 = 498.8097;
+  msg.param7 = 598.8097;
   msg.target_system = 1;
   msg.target_component = 1;
   msg.source_system = 1;
