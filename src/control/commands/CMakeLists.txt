@@ -15,6 +15,10 @@ find_package(rclpy REQUIRED)
 add_executable(takeoff src/takeoff.cpp)
 ament_target_dependencies(takeoff rclcpp px4_msgs)
 
+install(DIRECTORY
+  launch
+  DESTINATION share/${PROJECT_NAME})
+
 install(TARGETS
   takeoff
   DESTINATION lib/${PROJECT_NAME})
