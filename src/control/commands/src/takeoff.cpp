@@ -39,6 +39,9 @@ public:
     sensor_sub_ = this->create_subscription<px4_msgs::msg::SensorGps>("/fmu/out/vehicle_gps_position", qos,
 								      std::bind(&TakeoffControl::gps_callback, this,
 										std::placeholders::_1));
+    status_sub_ = this->create_subscription<px4_msgs::msg::VehicleStatus>("/fmu/out/vehicle_status", qos,
+									  std::bind(&TakeoffControl::status_callback,
+										    this, std::placeholders::_1));
     setpoint_counter_ = 0;
     
     auto timer_callback = [this]() -> void
@@ -77,6 +80,11 @@ private:
     RCLCPP_INFO_STREAM(this->get_logger(),"Alt: "<< alt_in_);
   }
 
+  void status_callback(const px4_msgs::msg::VehicleStatus& msg)
+  {
+    RCLCPP_INFO_STREAM(this->get_logger(), "status callback");
+  }
+  
   float int_to_float_conversion(int input, int flag)
   {
     float output; 
@@ -95,6 +103,7 @@ private:
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::Publisher<px4_msgs::msg::VehicleCommand>::SharedPtr takeoff_pub_;
   rclcpp::Subscription<px4_msgs::msg::SensorGps>::SharedPtr sensor_sub_;
+  rclcpp::Subscription<px4_msgs::msg::VehicleStatus>::SharedPtr status_sub_;
   
   std::atomic<uint64_t> timestamp_;
   int setpoint_counter_;
