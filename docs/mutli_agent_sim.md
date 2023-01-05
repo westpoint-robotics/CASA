@@ -24,4 +24,9 @@ $ ros2 node list
 /px4_2/px4_micro_xrce_dds
 ```
 
-You can set the names space with the `PX4_MICRODDS_NS` environment variable. 
+You can set the names space with the `PX4_MICRODDS_NS` environment variable.
+
+#### TODOs ####
+
+1. Change location of the sim, right now it only works at the default Zurich location.
+2. How can we start up multiple instances in one terminal, or automate the startup with a script so we don't need to open a new terminal every time we want to add an agent.
