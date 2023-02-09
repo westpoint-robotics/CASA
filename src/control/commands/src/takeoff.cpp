@@ -1,7 +1,7 @@
 /*
  * Author: Jason Hughes
  * Date: December 2022
- * Description: A simple script to take off a single uav
+ * Description: A simple script to take off a SINGLE uav
  */
 #include <chrono>
 #include <functional>

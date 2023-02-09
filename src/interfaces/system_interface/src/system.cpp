@@ -14,7 +14,7 @@
 #include <rclcpp/qos.hpp>
 
 #include "px4_msgs/msg/vehicle_status.hpp"
-
+#include "px4_msgs/msg/sensor_gps.hpp"
 //#include "system_interface/system.hpp"
 
 class SystemInterface : public rclcpp::Node
@@ -27,38 +27,50 @@ public:
     qos.best_effort();
     qos.transient_local();
 
-    //declare parameters below
-
-    //rclcpp::executors::SingleThreadExecutor exec;
-    //std::vector<rclcpp::Node::SharedPtr> node_references;
-    //std::vector<rclcpp::Subscription<px4_msgs::msg::VehicleStatus>::SharedPtr> sub_references;
-
-    for (int i = 0; i < 2; i++)
+    this -> declare_parameter("sys_id", 1);
+     
+    //need the number of agents in the swarm 
+    for (int i = 1; i <= 2; i++)
       {
-	std::string topic = "px4_"+ std::to_string(i) + "/fmu/out/vehicle_status";
-	auto sub = this -> create_subscription<px4_msgs::msg::VehicleStatus>(topic,
-									     qos,
-									     std::bind(&SystemInterface::status_callback,
-										       this,
-										       std::placeholders::_1));
-
-	sub_references.push_back(sub);
 	
-      }
+	std::string status_topic = "px4_"+ std::to_string(i) + "/fmu/out/vehicle_status";
+	std::string gps_topic = "px4_"+ std::to_string(i) + "/fmu/out/vehicle_gps_position";
+	
+	if (i != my_sys_id_)
+	  {
+	    auto status_sub = this -> create_subscription<px4_msgs::msg::VehicleStatus>(status_topic, qos, std::bind(&SystemInterface::status_callback ,this, std::placeholders::_1));
+	    auto gps_sub = this -> create_subscription<px4_msgs::msg::SensorGps>(gps_topic, qos, std::bind(&SystemInterface::gps_callback ,this, std::placeholders::_1));
+           
+	    status_references.push_back(status_sub);
+            gps_references.push_back(gps_sub);
+           }
+       }
   }
 
 private:
 
-  std::vector<rclcpp::Subscription<px4_msgs::msg::VehicleStatus>::SharedPtr> sub_references;
+  std::vector<rclcpp::Subscription<px4_msgs::msg::VehicleStatus>::SharedPtr> status_references;
+  std::vector<rclcpp::Subscription<px4_msgs::msg::SensorGps>::SharedPtr> gps_references;
 
   void status_callback(const px4_msgs::msg::VehicleStatus& msg);
+  void gps_callback(const px4_msgs::msg::SensorGps& msg);
 
+  int sys_id_in_;
+  int my_sys_id_;
+  
 };
 
 void SystemInterface::status_callback(const px4_msgs::msg::VehicleStatus& msg)
 {
-  RCLCPP_INFO_STREAM(this->get_logger(), "message recieved");
+  sys_id_in_ = msg.system_id;
+  RCLCPP_INFO_STREAM(this->get_logger(), "message recieved from: "<< sys_id_in_);
 }
+
+void SystemInterface::gps_callback(const px4_msgs::msg::SensorGps& msg)
+{
+  RCLCPP_INFO_STREAM(this->get_logger(), "recieved gps message");
+}
+
 
 int main(int argc, char * argv[])
 {
