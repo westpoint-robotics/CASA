@@ -11,9 +11,9 @@
 
   <depend>std_msgs</depend>
   <depend>nav_msgs</depend>
-  <depend>launch</depend>
   <depend>px4_msgs</depend>
-
+  <depend>launch</depend>
+  
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
 

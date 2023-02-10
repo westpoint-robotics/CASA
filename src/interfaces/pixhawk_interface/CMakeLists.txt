@@ -7,10 +7,22 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
-find_package(launch REQUIRED)
 find_package(px4_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
+
+add_executable(global_comms src/global_comms.cpp)
+ament_target_dependencies(global_comms rclcpp px4_msgs sensor_msgs)
+
+install(TARGETS
+  global_comms
+  DESTINATION lib/${PROJECT_NAME})
+
+install(DIRECTORY
+  launch
+  DESTINATION share/${PROJECT_NAME})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
