@@ -10,14 +10,19 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
 find_package(px4_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 
-add_executable(global_comms src/global_comms.cpp)
-ament_target_dependencies(global_comms rclcpp px4_msgs sensor_msgs)
+add_executable(position src/position.cpp)
+ament_target_dependencies(position rclcpp px4_msgs sensor_msgs geometry_msgs)
+
+add_executable(status src/status.cpp)
+ament_target_dependencies(status rclcpp px4_msgs sensor_msgs geometry_msgs)
 
 install(TARGETS
-  global_comms
+  position
+  status
   DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY
