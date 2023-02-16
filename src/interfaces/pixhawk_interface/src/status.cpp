@@ -15,10 +15,10 @@
 #include "px4_msgs/msg/failsafe_flags.hpp"
 #include "px4_msgs/msg/vehicle_status.hpp"
 
-
-
 using namespace std::chrono;
 using namespace std::chrono_literals;
+
+// TODO: Add in debbuggigng statements and GCS interfacing. 
 
 class StatusInterface : public rclcpp::Node
 {
@@ -54,6 +54,10 @@ public:
 private:
 
   int sys_id_;
+
+  int arming_state_, latest_disarming_reason_, nav_state_, system_id_;
+
+  bool battery_low_, battery_unhealthy_;
   
   rclcpp::Subscription<px4_msgs::msg::VehicleStatus>::SharedPtr status_sub_;
   rclcpp::Subscription<px4_msgs::msg::FailsafeFlags>::SharedPtr failsafe_sub_;
@@ -65,12 +69,16 @@ private:
 
 void StatusInterface::status_callback(const px4_msgs::msg::VehicleStatus& msg)
 {
-
+  arming_state_ = msg.arming_state;
+  latest_disarming_reason_ = msg.latest_disarming_reason;
+  nav_state_ = msg.nav_state;
+  system_id_ = msg.system_id;
 }
 
 void StatusInterface::failsafe_callback(const px4_msgs::msg::FailsafeFlags& msg)
 {
-  
+  battery_low_ = msg.battery_low_remaining_time;
+  battery_unhealthy_ = msg.battery_unhealthy;
 }
 
 int main(int argc, char * argv[])

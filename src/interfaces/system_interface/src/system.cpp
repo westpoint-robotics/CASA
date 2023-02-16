@@ -13,8 +13,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp/qos.hpp>
 
-#include "px4_msgs/msg/vehicle_status.hpp"
-#include "px4_msgs/msg/sensor_gps.hpp"
+#include "sensor_msgs/msg/nav_sat_fix.hpp"
 //#include "system_interface/system.hpp"
 
 class SystemInterface : public rclcpp::Node
@@ -33,15 +32,12 @@ public:
     for (int i = 1; i <= 2; i++)
       {
 	
-	std::string status_topic = "px4_"+ std::to_string(i) + "/fmu/out/vehicle_status";
-	std::string gps_topic = "px4_"+ std::to_string(i) + "/fmu/out/vehicle_gps_position";
+	std::string gps_topic = "casa_"+ std::to_string(i) + "/external/global_position";
 	
 	if (i != my_sys_id_)
 	  {
-	    auto status_sub = this -> create_subscription<px4_msgs::msg::VehicleStatus>(status_topic, qos, std::bind(&SystemInterface::status_callback ,this, std::placeholders::_1));
-	    auto gps_sub = this -> create_subscription<px4_msgs::msg::SensorGps>(gps_topic, qos, std::bind(&SystemInterface::gps_callback ,this, std::placeholders::_1));
-           
-	    status_references.push_back(status_sub);
+	    auto gps_sub = this -> create_subscription<sensor_msgs::msg::NavSatFix>(gps_topic, qos, std::bind(&SystemInterface::gps_callback ,this, std::placeholders::_1));
+          
             gps_references.push_back(gps_sub);
            }
        }
@@ -49,24 +45,17 @@ public:
 
 private:
 
-  std::vector<rclcpp::Subscription<px4_msgs::msg::VehicleStatus>::SharedPtr> status_references;
-  std::vector<rclcpp::Subscription<px4_msgs::msg::SensorGps>::SharedPtr> gps_references;
+  std::vector<rclcpp::Subscription<sensor_msgs::msg::NavSatFix>::SharedPtr> gps_references;
 
-  void status_callback(const px4_msgs::msg::VehicleStatus& msg);
-  void gps_callback(const px4_msgs::msg::SensorGps& msg);
+  void gps_callback(const sensor_msgs::msg::NavSatFix& msg);
 
   int sys_id_in_;
   int my_sys_id_;
   
 };
 
-void SystemInterface::status_callback(const px4_msgs::msg::VehicleStatus& msg)
-{
-  sys_id_in_ = msg.system_id;
-  RCLCPP_INFO_STREAM(this->get_logger(), "message recieved from: "<< sys_id_in_);
-}
 
-void SystemInterface::gps_callback(const px4_msgs::msg::SensorGps& msg)
+void SystemInterface::gps_callback(const sensor_msgs::msg::NavSatFix& msg)
 {
   RCLCPP_INFO_STREAM(this->get_logger(), "recieved gps message");
 }
