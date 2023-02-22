@@ -68,7 +68,7 @@ void SystemInterface::gps_callback(const sensor_msgs::msg::NavSatFix& msg)
   
   swarm_tracker_.insert(std::pair<int,float(*)[3]>(sys_id_in_, &data_in));
   
-  RCLCPP_INFO_STREAM(this->get_logger(),"swarm_tracker size: " << swarm_tracker_.size()) 
+  RCLCPP_INFO_STREAM(this->get_logger(),"swarm_tracker size: " << swarm_tracker_.size()); 
 }
 
 

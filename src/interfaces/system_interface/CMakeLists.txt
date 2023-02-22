@@ -12,18 +12,21 @@ find_package(rclpy REQUIRED)
 find_package(px4_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
 
 include_directories(include)
 
 add_executable(system src/system.cpp)
+add_executable(occupancy_grid src/occupancy_grid.cpp)
 ament_target_dependencies(system rclcpp sensor_msgs px4_msgs)
-
+ament_target_dependencies(occupancy_grid nav_msgs geometry_msgs)
 #install(DIRECTORY
 #  launch
 #  DESTINATION share/${PROJECT_NAME})
 
 install(TARGETS
   system
+  occupancy_grid
   DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
