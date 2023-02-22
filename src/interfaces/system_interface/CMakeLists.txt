@@ -11,10 +11,12 @@ find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
 find_package(px4_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
-find_package(geometry_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
+
+include_directories(include)
 
 add_executable(system src/system.cpp)
-ament_target_dependencies(system rclcpp px4_msgs)
+ament_target_dependencies(system rclcpp sensor_msgs px4_msgs)
 
 #install(DIRECTORY
 #  launch

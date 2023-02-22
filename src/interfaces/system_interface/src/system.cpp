@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 #include <stdint.h>
+#include <map>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp/qos.hpp>
 
@@ -34,7 +35,7 @@ public:
 	
 	std::string gps_topic = "casa_"+ std::to_string(i) + "/external/global_position";
 	
-	if (i != my_sys_id_)
+	if (i != sys_id_in_)
 	  {
 	    auto gps_sub = this -> create_subscription<sensor_msgs::msg::NavSatFix>(gps_topic, qos, std::bind(&SystemInterface::gps_callback ,this, std::placeholders::_1));
           
@@ -49,15 +50,25 @@ private:
 
   void gps_callback(const sensor_msgs::msg::NavSatFix& msg);
 
+  std::map<int,float(*)[3]> swarm_tracker_; 
+  
   int sys_id_in_;
-  int my_sys_id_;
+  float lat_in_, lon_in_, alt_in_;
   
 };
 
 
 void SystemInterface::gps_callback(const sensor_msgs::msg::NavSatFix& msg)
 {
-  RCLCPP_INFO_STREAM(this->get_logger(), "recieved gps message");
+  sys_id_in_ = std::stoi(msg.header.frame_id);
+  lat_in_ = msg.latitude;
+  lon_in_ = msg.longitude;
+  alt_in_ = msg.altitude;
+  float data_in[3] = {lat_in_, lon_in_, alt_in_};
+  
+  swarm_tracker_.insert(std::pair<int,float(*)[3]>(sys_id_in_, &data_in));
+  
+  RCLCPP_INFO_STREAM(this->get_logger(),"swarm_tracker size: " << swarm_tracker_.size()) 
 }
 
 
