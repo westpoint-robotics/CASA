@@ -62,14 +62,19 @@ nav_msgs::msg::OccupancyGrid OccupancyGrid::buildGrid( std::map<int, float(*)[3]
   for( auto const& element : input_map )
     {
       float global_pose[3] = element.second;
-      Eigen::Vector2d utm_coords = llToUTM(global_pose[0],global_pose[1]);
+      Eigen::Vector2d utm_coo = globalToLocal(global_pose[0],global_pose[1]);
     }
 
 }
 
-void OccupancyGrid::globalToLocal(float lat, float lon, float x, float y)
+Eigen::Vector2d OccupancyGrid::globalToLocal(float external_lat, float external_lon, float inernal_x, float internal_y, float internal_lat, float internal_lon)
 {
+  Eigen::Vector2d external_utm_coords = llToUTM(external_lat, external_lon);
+  Eigen::Vector2d internal_utm_coords = llToUtm(internal_lat, internal_lon);
 
+  Eigen::Vector2d xy_diff = internal_utm_coords - external_utm_coords;
+
+  return xy_diff;
 }
 
 Eigen::Vector2d OccupancyGrid::llToUTM(float lat, float lon)
