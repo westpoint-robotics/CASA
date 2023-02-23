@@ -59,16 +59,51 @@ nav_msgs::msg::OccupancyGrid OccupancyGrid::buildGrid( std::map<int, float(*)[3]
   ros_ogrid_.info.height = height_;
   ros_ogrid_.info.origin = map_origin_;
 
+  Eigen::ArrayXXf map_grid = Eigen::ArrayXXf::Zero(width_ / static_cast<int> map_resolution_, height_ / static_cast<int> map_resolution_);
+  
   for( auto const& element : input_map )
     {
+      // get difference between 
       float global_pose[3] = element.second;
-      Eigen::Vector2d utm_coo = globalToLocal(global_pose[0],global_pose[1]);
+      Eigen::Vector2d xy_diff = manhattanDistance(global_pose[0],global_pose[1]);
     }
 
 }
 
-Eigen::Vector2d OccupancyGrid::globalToLocal(float external_lat, float external_lon, float inernal_x, float internal_y, float internal_lat, float internal_lon)
+Eigen::ArrayXXf OccupancyGrid::addObject(Eigen::Vector2d manhattan_distance, Eigen::ArrayXXf map_grid)
 {
+  int x,y;
+  
+  if (width_/2 + manhattan_distance[0] <= width_ && width_/2 + manhattan_distance[0] >= 0)
+    {
+      x = width_ + manhattan_distance[0];
+    }
+  else
+    {
+      x = NULL;
+    }
+
+  if (height_/2 +manhattan_distance[1]  <= height_ && height_/2 + manhattan_distance[1] >= 0)
+    {
+      y = height_ + manhattan_distance[1];
+    }
+  else
+    {
+      y = NULL;
+    }
+
+  if (x != NULL and y != NULL)
+    {
+      map_grid[x][y] = 1.0
+    }
+
+  return map_grid
+      
+}
+
+Eigen::Vector2d OccupancyGrid::manhattanDistance(float external_lat, float external_lon, float internal_lat, float internal_lon)
+{
+  // calculates the x and y difference between the agent and the other agents in meters. 
   Eigen::Vector2d external_utm_coords = llToUTM(external_lat, external_lon);
   Eigen::Vector2d internal_utm_coords = llToUtm(internal_lat, internal_lon);
 
