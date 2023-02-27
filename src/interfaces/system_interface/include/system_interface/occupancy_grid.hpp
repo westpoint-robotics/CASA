@@ -31,8 +31,8 @@ public:
   
 private:
 
-  Eigen::Vector2d globalToLocal(float external_lat, float external_lon, float internal_x, float internaly, float internal_lat, float internal_lon);
-
+  Eigen::Vector2d manhattanDistance(float external_lat, float external_lon, float internal_lat, float internal_lon);
+  Eigen::ArrayXXf addObject(Eigen::Vector2d manhattan_distance, Eigen::ArrayXXf map_grid);
   Eigen::Vector2d llToUTM(float lat, float lon);
   
   nav_msgs::msg::OccupancyGrid ros_ogrid_;

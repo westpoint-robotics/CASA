@@ -32,6 +32,10 @@ void OccupancyGrid::setMapOrigin(geometry_msgs::msg::Pose origin)
   map_origin_ = origin;
 }
 
+void OccupancyGrid::setGrid(int width, int height, float resolution)
+{
+  grid_ = Eigen::ArrayXXf::Zero(width / static_cast<int> resolution, height / static_cast<int> resolution);
+
 float OccupancyGrid::getMapResolution()
 {
   return map_resolution_;
@@ -45,6 +49,11 @@ int OccupancyGrid::getMapWidth()
 int OccupancyGrid::getMapHeight()
 {
   return height_;
+}
+
+Eigen::ArrayXXf OccupancyGrid::getrid()
+{
+  return grid_;
 }
 
 geometry_msgs::msg::Pose OccupancyGrid::getMapOrigin()
