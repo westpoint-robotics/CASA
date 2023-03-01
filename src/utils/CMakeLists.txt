@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(system_interface)
+project(utils)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -8,27 +8,25 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(rclpy REQUIRED)
-find_package(px4_msgs REQUIRED)
-find_package(std_msgs REQUIRED)
-find_package(sensor_msgs REQUIRED)
-find_package(nav_msgs REQUIRED)
-find_package(utils REQUIRED)
 
 include_directories(include)
 
-add_executable(system src/system.cpp)
-add_executable(occupancy_grid src/occupancy_grid.cpp)
-ament_target_dependencies(system rclcpp sensor_msgs px4_msgs)
-ament_target_dependencies(occupancy_grid nav_msgs geometry_msgs utils)
-#install(DIRECTORY
-#  launch
-#  DESTINATION share/${PROJECT_NAME})
+add_library(utils src/casa_utils.cpp)
+ament_export_targets(utils HAS_LIBRARY_TARGET)
 
-install(TARGETS
-  system
-  occupancy_grid
-  DESTINATION lib/${PROJECT_NAME})
+install(
+  DIRECTORY include/utils
+  DESTINATION include
+  )
+
+install(
+  TARGETS utils
+  EXPORT utils
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION lib
+  INCLUDES DESTINATION include
+  )
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
