@@ -15,7 +15,8 @@
 #include <rclcpp/qos.hpp>
 
 #include "sensor_msgs/msg/nav_sat_fix.hpp"
-//#include "system_interface/system.hpp"
+#include "geometry_msgs/msg/pose_stamped.hpp"
+#include "system_interface/agent_tracker.hpp"
 
 class SystemInterface : public rclcpp::Node
 {
@@ -28,7 +29,11 @@ public:
     qos.transient_local();
 
     this -> declare_parameter("sys_id", 1);
-     
+
+    local_pose_sub_ = this -> create_subscription<geometry_msgs::msg::PoseStamped>("/internal/local_position",
+										     qos,
+										     std::bind(&SystemInterface::localCallback, this, std::placeholders::_1));
+    
     //need the number of agents in the swarm 
     for (int i = 1; i <= 2; i++)
       {
@@ -37,7 +42,7 @@ public:
 	
 	if (i != sys_id_in_)
 	  {
-	    auto gps_sub = this -> create_subscription<sensor_msgs::msg::NavSatFix>(gps_topic, qos, std::bind(&SystemInterface::gps_callback ,this, std::placeholders::_1));
+	    auto gps_sub = this -> create_subscription<sensor_msgs::msg::NavSatFix>(gps_topic, qos, std::bind(&SystemInterface::externalGpsCallback ,this, std::placeholders::_1));
           
             gps_references.push_back(gps_sub);
            }
@@ -47,18 +52,28 @@ public:
 private:
 
   std::vector<rclcpp::Subscription<sensor_msgs::msg::NavSatFix>::SharedPtr> gps_references;
-
-  void gps_callback(const sensor_msgs::msg::NavSatFix& msg);
+  rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr local_pose_sub_;
+  
+  void externalGpsCallback(const sensor_msgs::msg::NavSatFix& msg);
+  void localCallback(const geometry_msgs::msg::PoseStamped& msg);
 
   std::map<int,float(*)[3]> swarm_tracker_; 
   
   int sys_id_in_;
   float lat_in_, lon_in_, alt_in_;
-  
+  float internal_lat_, internal_lon_;
+  float local_x_, local_y_;
 };
 
 
-void SystemInterface::gps_callback(const sensor_msgs::msg::NavSatFix& msg)
+void SystemInterface::localCallback(const geometry_msgs::msg::PoseStamped& msg)
+{
+  local_x_ = msg.pose.position.x;
+  local_y_ = msg.pose.position.y;
+}
+
+
+void SystemInterface::externalGpsCallback(const sensor_msgs::msg::NavSatFix& msg)
 {
   sys_id_in_ = std::stoi(msg.header.frame_id);
   lat_in_ = msg.latitude;

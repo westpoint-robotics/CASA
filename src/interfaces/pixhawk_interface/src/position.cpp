@@ -56,9 +56,9 @@ public:
 										std::bind(&PixhawkInterface::attitude_callback, this, std::placeholders::_1));
 									     
     
-    internal_local_pub_ = this -> create_publisher<geometry_msgs::msg::PoseStamped>("/internal/global_position", qos);
+    internal_local_pub_ = this -> create_publisher<geometry_msgs::msg::PoseStamped>("/internal/local_position", qos);
     external_gps_pub_ = this -> create_publisher<sensor_msgs::msg::NavSatFix>("/external/global_position", qos);
-
+    
     timer_ = this -> create_wall_timer(1000ms, std::bind(&PixhawkInterface::timer_callback, this));
 
   }

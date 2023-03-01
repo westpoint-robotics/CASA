@@ -19,8 +19,10 @@ include_directories(include)
 
 add_executable(system src/system.cpp)
 add_executable(occupancy_grid src/occupancy_grid.cpp)
-ament_target_dependencies(system rclcpp sensor_msgs px4_msgs)
+add_executable(agent_tracker src/agent_tracker.cpp)
+ament_target_dependencies(system rclcpp sensor_msgs px4_msgs utils)
 ament_target_dependencies(occupancy_grid nav_msgs geometry_msgs utils)
+ament_target_dependencies(agent_tracker utils)
 #install(DIRECTORY
 #  launch
 #  DESTINATION share/${PROJECT_NAME})
