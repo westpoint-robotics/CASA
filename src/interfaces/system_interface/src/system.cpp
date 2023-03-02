@@ -30,10 +30,12 @@ public:
 
     this -> declare_parameter("sys_id", 1);
 
-    local_pose_sub_ = this -> create_subscription<geometry_msgs::msg::PoseStamped>("/internal/local_position",
+    local_pose_sub_ = this -> create_subscription<geometry_msgs::msg::PoseStamped>("/internal/local_position", //update this topic name
 										     qos,
 										     std::bind(&SystemInterface::localCallback, this, std::placeholders::_1));
-    
+    internal_gps_sub_ = this -> create_subscription<sensor_msgs::msg::NavSatFix>("/external/global_position", //update this topic name
+										 qos,
+										 std::bind(&SystemInterface::internalGpsCallback, this, std::placeholders::_1));
     //need the number of agents in the swarm 
     for (int i = 1; i <= 2; i++)
       {
@@ -42,8 +44,9 @@ public:
 	
 	if (i != sys_id_in_)
 	  {
-	    auto gps_sub = this -> create_subscription<sensor_msgs::msg::NavSatFix>(gps_topic, qos, std::bind(&SystemInterface::externalGpsCallback ,this, std::placeholders::_1));
-          
+	    auto gps_sub = this -> create_subscription<sensor_msgs::msg::NavSatFix>(gps_topic,
+										    qos,
+										    std::bind(&SystemInterface::externalGpsCallback ,this, std::placeholders::_1));
             gps_references.push_back(gps_sub);
            }
        }
@@ -53,11 +56,16 @@ private:
 
   std::vector<rclcpp::Subscription<sensor_msgs::msg::NavSatFix>::SharedPtr> gps_references;
   rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr local_pose_sub_;
+  rclcpp::Subscription<sensor_msgs::msg::NavSatFix>::SharedPtr internal_gps_sub_;
   
   void externalGpsCallback(const sensor_msgs::msg::NavSatFix& msg);
   void localCallback(const geometry_msgs::msg::PoseStamped& msg);
+  void internalGpsCallback(const sensor_msgs::msg::NavSatFix& msg);
 
-  std::map<int,float(*)[3]> swarm_tracker_; 
+  std::map<int,AgentTracker> system_tracker_; 
+
+  std::vector<int> system_ids_;
+  std::vector<AgentTracker> agent_tracker_;
   
   int sys_id_in_;
   float lat_in_, lon_in_, alt_in_;
@@ -73,17 +81,34 @@ void SystemInterface::localCallback(const geometry_msgs::msg::PoseStamped& msg)
 }
 
 
+void SystemInterface::internalGpsCallback(const sensor_msgs::msg::NavSatFix& msg)
+{
+  internal_lat_ = msg.latitude;
+  internal_lon_ = msg.longitude;
+}
+
+
 void SystemInterface::externalGpsCallback(const sensor_msgs::msg::NavSatFix& msg)
 {
   sys_id_in_ = std::stoi(msg.header.frame_id);
   lat_in_ = msg.latitude;
   lon_in_ = msg.longitude;
   alt_in_ = msg.altitude;
-  float data_in[3] = {lat_in_, lon_in_, alt_in_};
-  
-  swarm_tracker_.insert(std::pair<int,float(*)[3]>(sys_id_in_, &data_in));
-  
-  RCLCPP_INFO_STREAM(this->get_logger(),"swarm_tracker size: " << swarm_tracker_.size()); 
+
+  if (std::count(system_ids_.begin(), system_ids_.end(), sys_id_in_))
+    {
+      // if the sys_id is in the list, update the 
+      system_tracker_[sys_id_in_].setLatLon(lat_in_, lon_in_);
+      system_tracker_[sys_id_in_].setAlt(alt_in_);
+      system_tracker_[sys_id_in_].calcRelativeXY(internal_lat_, internal_lon_, local_x_, local_y_);
+    }
+  else
+    {
+      AgentTracker agent = AgentTracker(sys_id_in_, lat_in_, lon_in_, alt_in_, internal_lat_, internal_lon_, local_x_, local_y_);
+      system_ids_.push_back(sys_id_in_);
+      system_tracker_.insert(std::pair<int,AgentTracker>(sys_id_in_,agent));
+    }
+
 }
 
 
