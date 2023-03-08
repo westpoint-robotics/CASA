@@ -78,3 +78,19 @@ Eigen::Vector2d manhattanDistance(float x1, float y1, float x2, float y2)
 
   return coord1 - coord2;
 }
+
+
+float intToFloatConversion(int input, int flag)
+{
+  // utility function to convert incoming ints to outgoing floats 
+  float output; 
+  if (flag == 0) //altitude
+    {
+      output = input * 0.001;
+    }
+  else //lat or longitude
+    {
+      output = input * 0.0000001;
+    }
+  return output;
+}

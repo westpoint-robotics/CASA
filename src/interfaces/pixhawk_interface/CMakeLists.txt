@@ -13,9 +13,10 @@ find_package(nav_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(px4_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(utils REQUIRED)
 
 add_executable(position src/position.cpp)
-ament_target_dependencies(position rclcpp px4_msgs sensor_msgs geometry_msgs)
+ament_target_dependencies(position rclcpp px4_msgs sensor_msgs geometry_msgs utils)
 
 add_executable(status src/status.cpp)
 ament_target_dependencies(status rclcpp px4_msgs sensor_msgs geometry_msgs)

@@ -18,7 +18,7 @@
 #include "px4_msgs/msg/vehicle_attitude.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "sensor_msgs/msg/nav_sat_fix.hpp"
-
+#include "utils/casa_utils.hpp"
 
 using namespace std::chrono;
 using namespace std::chrono_literals;
@@ -95,20 +95,6 @@ private:
   void timer_callback();
 };
 
-float PixhawkInterface::int_to_float_conversion(int input, int flag)
-{
-  // utility function to convert incoming ints to outgoing floats 
-  float output; 
-  if (flag == 0) //altitude
-    {
-      output = input * 0.001;
-    }
-  else //lat or longitude
-    {
-      output = input * 0.0000001;
-    }
-  return output;
-}
 
 void PixhawkInterface::timer_callback()
 {
@@ -135,9 +121,9 @@ void PixhawkInterface::local_callback(const px4_msgs::msg::VehicleLocalPosition&
 
 void PixhawkInterface::gps_callback(const px4_msgs::msg::SensorGps& msg)
 {
-  lat_in_ = int_to_float_conversion(msg.lat, 1);
-  lon_in_ = int_to_float_conversion(msg.lon, 2);
-  alt_in_ = int_to_float_conversion(msg.alt, 0);
+  lat_in_ = intToFloatConversion(msg.lat, 1);
+  lon_in_ = intToFloatConversion(msg.lon, 2);
+  alt_in_ = intToFloatConversion(msg.alt, 0);
   //RCLCPP_INFO_STREAM(this->get_logger(), "recieved gps message at: "<< sys_id_);
 }
 
