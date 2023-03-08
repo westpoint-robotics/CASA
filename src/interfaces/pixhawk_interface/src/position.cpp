@@ -26,7 +26,7 @@ using namespace std::chrono_literals;
 class PixhawkInterface : public rclcpp::Node
 {
 public:
-  PixhawkInterface() : Node("pixhawk_interface")
+  PixhawkInterface() : Node("pixhawk_position_interface")
   {
     // set the Quality of Service
     // RELIABILITY: best effort
@@ -42,7 +42,7 @@ public:
     sys_id_ = this -> get_parameter("sys_id").get_parameter_value().get<int>();
     
     std::string sys_namespace = "px4_"+ std::to_string(sys_id_);
-    
+    internal_namespace_ = "casa"+ std::to_string(sys_id_);
     
     local_sub_ = this -> create_subscription<px4_msgs::msg::VehicleLocalPosition>(sys_namespace+"/fmu/out/vehicle_local_position",
 										qos,
@@ -56,8 +56,8 @@ public:
 										std::bind(&PixhawkInterface::attitude_callback, this, std::placeholders::_1));
 									     
     
-    internal_local_pub_ = this -> create_publisher<geometry_msgs::msg::PoseStamped>("/internal/local_position", qos);
-    external_gps_pub_ = this -> create_publisher<sensor_msgs::msg::NavSatFix>("/external/global_position", qos);
+    internal_local_pub_ = this -> create_publisher<geometry_msgs::msg::PoseStamped>(internal_namespace_+"/internal/local_position", qos);
+    external_gps_pub_ = this -> create_publisher<sensor_msgs::msg::NavSatFix>(internal_namespace_+"/external/global_position", qos);
     
     timer_ = this -> create_wall_timer(1000ms, std::bind(&PixhawkInterface::timer_callback, this));
 
@@ -66,7 +66,8 @@ public:
 private:
 
   int sys_id_;
-
+  std::string internal_namespace_;
+  
   float lat_in_, lon_in_, alt_in_;
 
   float local_x_in_, local_y_in_, local_z_in_;
@@ -129,7 +130,7 @@ void PixhawkInterface::local_callback(const px4_msgs::msg::VehicleLocalPosition&
   local_y_in_ = msg.y;
   local_z_in_ = msg.z;
   
-  RCLCPP_INFO_STREAM(this->get_logger(), "status message recieved at: "<< sys_id_);
+  RCLCPP_INFO_STREAM_ONCE(this->get_logger(), "ID " << sys_id_ << " connected to pixhawk");
 }
 
 void PixhawkInterface::gps_callback(const px4_msgs::msg::SensorGps& msg)
@@ -137,7 +138,7 @@ void PixhawkInterface::gps_callback(const px4_msgs::msg::SensorGps& msg)
   lat_in_ = int_to_float_conversion(msg.lat, 1);
   lon_in_ = int_to_float_conversion(msg.lon, 2);
   alt_in_ = int_to_float_conversion(msg.alt, 0);
-  RCLCPP_INFO_STREAM(this->get_logger(), "recieved gps message at: "<< sys_id_);
+  //RCLCPP_INFO_STREAM(this->get_logger(), "recieved gps message at: "<< sys_id_);
 }
 
 void PixhawkInterface::internal_publisher(float x, float y, float z, float qx, float qy, float qz, float qw)
@@ -167,7 +168,7 @@ void PixhawkInterface::external_publisher(float lat, float lon, float alt, int s
   msg.altitude = alt;
 
   msg.header.stamp = this -> get_clock() -> now();
-  msg.header.frame_id = sys_id;
+  msg.header.frame_id = std::to_string(sys_id);
 
   external_gps_pub_->publish(msg);
 }

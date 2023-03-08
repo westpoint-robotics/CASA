@@ -78,8 +78,3 @@ Eigen::Vector2d manhattanDistance(float x1, float y1, float x2, float y2)
 
   return coord1 - coord2;
 }
-
-int main()
-{
-  return 0;
-}
