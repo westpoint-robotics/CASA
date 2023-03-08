@@ -1,6 +1,6 @@
 ## Multi Agent Simulation ##
 
-First, make sure ignition gazebo is installed, follow the instructions [here](https://gazebosim.org/docs/garden/install_ubuntu)
+First, make sure ignition gazebo-garden is installed, follow the instructions [here](https://gazebosim.org/docs/garden/install_ubuntu). The standard intall with ros2-humble-desktop-full is not enough.
 
 In the `PX4_Autopilot` directory run:
 ```
