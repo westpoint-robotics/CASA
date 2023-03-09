@@ -1,0 +1,1 @@
+docker run --rm -it -p 8554:8554 --env PX4_HOME_LAT=41.3909262 --env PX4_HOME_LON=-73.9530714 --env PX4_HOME_ALT=640.0 jonasvautherin/px4-gazebo-headless:1.13.0 -v typhoon_h480
