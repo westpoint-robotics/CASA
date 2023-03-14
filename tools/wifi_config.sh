@@ -19,7 +19,7 @@ TXPOWER=10
 TEAM_SUBNET=11
 TEAM_CHAN=1
 TEAM_AP="00:99:88:77:66:55"
-TEAM_SSID="army"
+TEAM_SSID="casa"
 
 #parse options
 while getopts ":2IR:P:T:h" opt; do
@@ -52,12 +52,6 @@ if [ $ROUTER_USE != 0 ]; then
   sudo iptables -t nat -F  # Flush old rules first
   sudo iptables -t nat -A POSTROUTING -o $ROUTER_DEV -j MASQUERADE
 fi
-
-# Make sure SITL bridge device isn't running
-for dev in `/sbin/ip link | grep sitl_bridge | grep ',UP,' | awk '{print $2}' | sed 's/://'`; do
-  echo "Disabling interface $dev ..."
-  sudo ifconfig $dev down
-done
 
 sudo ifconfig $1 down
 sudo iwconfig $1 mode ad-hoc essid $TEAM_SSID channel $TEAM_CHAN \
