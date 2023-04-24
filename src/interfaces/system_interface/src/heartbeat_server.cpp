@@ -74,7 +74,7 @@ private:
   
   int opt_;
   socklen_t addrlen_;
-  new char buffer_[];
+  char buffer_[];
   char* msg_;
 
   void recieveFrom();
