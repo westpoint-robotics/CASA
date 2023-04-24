@@ -36,6 +36,11 @@ void AgentTracker::setRelativeXY(float x, float y)
   relative_y_ = y;
 }
 
+void AgentTracker::setTime(rclcpp::Time t)
+{
+  time_ = t;
+}
+
 int AgentTracker::getSysId()
 {
   return sys_id_;
@@ -56,6 +61,11 @@ Eigen::Vector2d AgentTracker::getRelativeXY()
 {
   Eigen::Vector2d xy(relative_x_, relative_y_);
   return xy;
+}
+
+rclcpp::Time AgentTracker::getTime()
+{
+  return time_;
 }
 
 void AgentTracker::calcRelativeXY(float internal_lat, float internal_lon, float internal_x,float internal_y)

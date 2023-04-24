@@ -35,8 +35,10 @@ public:
     qos.transient_local();
 
     this -> declare_parameter("sys_id", 1);
+    this -> declare_parameter("dropout", 30.0);
     my_id_ = this -> get_parameter("sys_id").get_parameter_value().get<int>();
-
+    dropout_ = this -> get_parameter("dropout").get_parameter_value().get<float>();
+    
     namespace_ = "casa" + std::to_string(my_id_);
     
     local_pose_sub_ = this -> create_subscription<geometry_msgs::msg::PoseStamped>(namespace_+"/internal/local_position", //update this topic name
@@ -81,12 +83,15 @@ private:
   void timerCallback();
 
   void posePublisher();
+
+  void checkTime();
   
   std::map<int,AgentTracker> system_tracker_; 
 
   std::vector<int> system_ids_;
 
   int my_id_;
+  float dropout_;
   std::string namespace_;
   
   int sys_id_in_;
@@ -99,6 +104,29 @@ private:
 void SystemInterface::timerCallback()
 {
   posePublisher();
+
+  if (dropout_ != 0)
+    {
+      checkTime();
+    }
+  
+}
+
+void SystemInterface::checkTime()
+{
+  // function to remove elements from the system_tracker if you have not heard from them
+  std::map<int,AgentTracker>::iterator iter;
+  rclcpp::Time now = this -> get_clock() -> now();
+  
+  for (iter = system_tracker_.begin(); iter != system_tracker_.end(); ++iter)
+    {
+      rclcpp::Time last_seen = iter->second.getTime();
+      
+      if ( now.seconds() - last_seen.seconds() > dropout_ )
+	{
+	  system_tracker_.erase(iter);
+	}
+    }
 }
 
 
@@ -145,6 +173,7 @@ void SystemInterface::internalGpsCallback(const sensor_msgs::msg::NavSatFix& msg
 void SystemInterface::externalGpsCallback(const sensor_msgs::msg::NavSatFix& msg)
 {
   std::string temp_id = msg.header.frame_id;
+  rclcpp::Time t = msg.header.stamp;
   RCLCPP_INFO_STREAM(this->get_logger(), "id: "<<temp_id);
   sys_id_in_ = std::stoi(temp_id);
   lat_in_ = msg.latitude;
@@ -153,9 +182,10 @@ void SystemInterface::externalGpsCallback(const sensor_msgs::msg::NavSatFix& msg
 
   if (std::count(system_ids_.begin(), system_ids_.end(), sys_id_in_))
     {
-      // if the sys_id is in the list, update the 
+      // if the sys_id is in the list, update the data
       system_tracker_.at(sys_id_in_).setLatLon(lat_in_, lon_in_);
       system_tracker_.at(sys_id_in_).setAlt(alt_in_);
+      system_tracker_.at(sys_id_in_).setTime(t);
       system_tracker_.at(sys_id_in_).calcRelativeXY(internal_lat_, internal_lon_, local_x_, local_y_);
     }
   else
