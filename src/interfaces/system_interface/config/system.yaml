@@ -1,0 +1,3 @@
+system_interface:
+  ros__parameters:
+    dropout: 30.0 #number of seconds until the agent drops another agent if
