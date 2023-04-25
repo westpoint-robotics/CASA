@@ -22,7 +22,7 @@ public:
   {
     opt_ = 1;
     addrlen_ = sizeof(address_);
-    buffer_[1024] = { 0 };
+    char buffer[1024] = { 0 };
 
     char* group = "239.255.255.250";
     //TODO: get group from a parameter

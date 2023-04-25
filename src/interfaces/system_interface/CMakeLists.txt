@@ -20,10 +20,12 @@ include_directories(include)
 add_executable(system src/system.cpp src/agent_tracker.cpp)
 add_executable(occupancy_grid src/occupancy_grid.cpp)
 add_executable(heartbeat_server src/heartbeat_server.cpp)
+add_executable(heartbeat_client src/heartbeat_client.cpp)
 
 ament_target_dependencies(system rclcpp sensor_msgs px4_msgs utils)
 ament_target_dependencies(occupancy_grid nav_msgs geometry_msgs utils)
 ament_target_dependencies(heartbeat_server rclcpp)
+ament_target_dependencies(heartbeat_client rclcpp)
 
 install(DIRECTORY
   launch
