@@ -20,7 +20,7 @@ class HeartbeatClient : public rclcpp::Node
 public:
   HeartbeatClient() : Node("heartbeat_client")
   {
-    const char* group_ = "239.255.25.250";
+    const char* group_ = "226.1.1.1";
 
     socket_fd_ = socket(AF_INET, SOCK_DGRAM, 0);
 
@@ -29,11 +29,14 @@ public:
 	RCLCPP_ERROR(this->get_logger(), "Error connecting to socket");
       }
 
-    memset(&address_, 0, sizeof(address_));
+    memset((char*) &address_, 0, sizeof(address_));
 
     address_.sin_family = AF_INET;
     address_.sin_addr.s_addr = inet_addr(group_);
     address_.sin_port = htons(5005);
+
+    local_interface_.s_addr = inet_addr("203.106.93.94");
+    setsockopt(socket_fd_, IPPROTO_IP, IP_MULTICAST_IF, (char*) &local_interface_, sizeof(local_interface_));
 
     timer_ = this -> create_wall_timer(10000ms, std::bind(&HeartbeatClient::sendHeartbeat, this));
   }
@@ -43,6 +46,7 @@ private:
   int socket_fd_;
 
   struct sockaddr_in address_;
+  struct in_addr local_interface_;
 
   rclcpp::TimerBase::SharedPtr timer_;
 

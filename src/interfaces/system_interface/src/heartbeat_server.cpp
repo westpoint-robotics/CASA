@@ -5,14 +5,17 @@
 
 #include <netinet/in.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <arpa/inet.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include <rclcpp/rclcpp.hpp>
 
 using namespace std::chrono;
 using namespace std::chrono_literals;
 
-#define PORT 8088
+#define PORT 5005
 #define MSGBUFSIZE 1024
 
 class HeartbeatServer : public rclcpp::Node
@@ -40,19 +43,19 @@ public:
 	exit(EXIT_FAILURE);
       }
 
-    memset(&address_, 0, sizeof(address_));
+    memset((char*) &address_, 0, sizeof(address_));
     
     address_.sin_family = AF_INET;
-    address_.sin_addr.s_addr = htonl(INADDR_ANY);
+    address_.sin_addr.s_addr = INADDR_ANY;
     address_.sin_port = htons(PORT);
 
-    if (bind(server_fd_, (struct sockaddr*)&address_, sizeof(address_)) < 0)
+    if (bind(server_fd_, (struct sockaddr*)&address_, sizeof(address_)))
       {
 	RCLCPP_ERROR(this->get_logger(), "Unable to bind to port");
 	exit(EXIT_FAILURE);
       }
 
-    mreq_.imr_multiaddr.s_addr = inet_addr(group);
+    mreq_.imr_multiaddr.s_addr = inet_addr("226.1.1.1");
     mreq_.imr_interface.s_addr = htonl(INADDR_ANY);
 
     if (setsockopt(server_fd_, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char*) &mreq_, sizeof(mreq_)) < 0)
@@ -60,7 +63,8 @@ public:
 	RCLCPP_ERROR(this->get_logger(), "Unable to join multicast group");
 	exit(EXIT_FAILURE);
       }
-
+    addrlen_ = sizeof(address_);
+    
     recieveFrom(buffer);
   }
     
@@ -86,15 +90,15 @@ void HeartbeatServer::recieveFrom(char buffer[])
     {
       RCLCPP_INFO(this->get_logger(), "waiting...");
       addrlen_ = sizeof(address_);
-      int nbytes = recvfrom(server_fd_, buffer, MSGBUFSIZE, 0, (struct sockaddr *) &address_, &addrlen_);
+      int nbytes = read(server_fd_, buffer, sizeof(buffer));
       if (nbytes < 0)
 	{
 	  RCLCPP_ERROR(this->get_logger(), "Error recieving message");
 	  exit(EXIT_FAILURE);
 	}
       buffer[nbytes] = '\0';
-      puts(buffer);
-      RCLCPP_INFO(this->get_logger(), "got heartbeat");
+      
+      RCLCPP_INFO_STREAM(this->get_logger(), "got heartbeat from "<<buffer);
     }
 }
 
