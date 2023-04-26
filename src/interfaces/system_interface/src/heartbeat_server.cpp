@@ -24,16 +24,17 @@ public:
     addrlen_ = sizeof(address_);
     char buffer[1024] = { 0 };
 
-    char* group = "239.255.255.250";
+    const char* group = "239.255.255.250";
     //TODO: get group from a parameter
+    server_fd_ = socket(AF_INET, SOCK_DGRAM, 0);
     
-    if ((server_fd_ = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+    if (server_fd_ < 0)
       {
 	RCLCPP_ERROR(this->get_logger(), "Could not create socket file descriptor");
 	exit(EXIT_FAILURE);
       }
 
-    if (setsockopt(server_fd_, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt_, sizeof(opt_)))
+    if (setsockopt(server_fd_, SOL_SOCKET, SO_REUSEADDR, &opt_, sizeof(opt_)) < 0)
       {
 	RCLCPP_ERROR(this->get_logger(), "Unable to set socket options");
 	exit(EXIT_FAILURE);
@@ -42,7 +43,7 @@ public:
     memset(&address_, 0, sizeof(address_));
     
     address_.sin_family = AF_INET;
-    address_.sin_addr.s_addr = INADDR_ANY;
+    address_.sin_addr.s_addr = htonl(INADDR_ANY);
     address_.sin_port = htons(PORT);
 
     if (bind(server_fd_, (struct sockaddr*)&address_, sizeof(address_)) < 0)
@@ -60,7 +61,7 @@ public:
 	exit(EXIT_FAILURE);
       }
 
-    recieveFrom();
+    recieveFrom(buffer);
   }
     
 private:
@@ -68,32 +69,32 @@ private:
   int server_fd_;
   int new_socket_;
   int valread_;
-
   struct sockaddr_in address_;
   struct ip_mreq mreq_;
   
   int opt_;
   socklen_t addrlen_;
-  char buffer_[];
   char* msg_;
 
-  void recieveFrom();
+  void recieveFrom(char buffer[]);
 };
 
-void HeartbeatServer::recieveFrom()
+void HeartbeatServer::recieveFrom(char buffer[])
 {
   
   while (true)
     {
+      RCLCPP_INFO(this->get_logger(), "waiting...");
       addrlen_ = sizeof(address_);
-      int nbytes = recvfrom(server_fd_, buffer_, MSGBUFSIZE, 0, (struct sockaddr *) &address_, &addrlen_);
+      int nbytes = recvfrom(server_fd_, buffer, MSGBUFSIZE, 0, (struct sockaddr *) &address_, &addrlen_);
       if (nbytes < 0)
 	{
 	  RCLCPP_ERROR(this->get_logger(), "Error recieving message");
 	  exit(EXIT_FAILURE);
 	}
-      buffer_[nbytes] = '\0';
-      puts(buffer_);
+      buffer[nbytes] = '\0';
+      puts(buffer);
+      RCLCPP_INFO(this->get_logger(), "got heartbeat");
     }
 }
 

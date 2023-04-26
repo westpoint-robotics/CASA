@@ -20,7 +20,7 @@ class HeartbeatClient : public rclcpp::Node
 public:
   HeartbeatClient() : Node("heartbeat_client")
   {
-    char* group_ = "239.255.25.250";
+    const char* group_ = "239.255.25.250";
 
     socket_fd_ = socket(AF_INET, SOCK_DGRAM, 0);
 
@@ -53,7 +53,8 @@ void HeartbeatClient::sendHeartbeat()
 {
   const char* msg = "142";
   int nbytes = sendto(socket_fd_, msg, strlen(msg), 0, (struct sockaddr*) &address_, sizeof(address_));
-
+  RCLCPP_INFO(this->get_logger(), "sending heartbeat");
+  
   if (nbytes < 0)
     {
       RCLCPP_ERROR(this->get_logger(), "Error sending heartbeat");

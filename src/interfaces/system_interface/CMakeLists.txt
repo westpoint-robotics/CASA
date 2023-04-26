@@ -38,6 +38,8 @@ install(DIRECTORY
 install(TARGETS
   system
   occupancy_grid
+  heartbeat_server
+  heartbeat_client
   DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
