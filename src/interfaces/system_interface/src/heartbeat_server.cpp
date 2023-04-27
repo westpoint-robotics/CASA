@@ -1,5 +1,5 @@
 /* Author: Jason Hughes
- * Date: April 2022\
+ * Date: April 2022
  * About: Server side heartbeat caster 
  */
 
@@ -9,8 +9,12 @@
 #include <arpa/inet.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <vector>
 
 #include <rclcpp/rclcpp.hpp>
+#include <rclcpp/qos.hpp>
+
+#include "std_msgs/msg/u_int16_multi_array.hpp"
 
 using namespace std::chrono;
 using namespace std::chrono_literals;
@@ -23,6 +27,7 @@ class HeartbeatServer : public rclcpp::Node
 public:
   HeartbeatServer() : Node("heartbeat_server")
   {
+    // create and get the socket
     opt_ = 1;
     addrlen_ = sizeof(address_);
     char buffer[1024] = { 0 };
@@ -64,6 +69,17 @@ public:
 	exit(EXIT_FAILURE);
       }
     addrlen_ = sizeof(address_);
+
+    // ROS stuff
+    my_id_ = this -> get_parameter("sys_id").get_parameter_value().get<int>();
+    std::string nspc = "casa" + std::to_string(my_id_);
+
+    rclcpp::QoS qos(10);
+    qos.keep_last(10);
+    qos.best_effort();
+    qos.transient_local();
+    
+    system_id_pub_ = this -> create_publisher<std_msgs::msg::UInt16MultiArray>(nspc+"/internal/system_ids", qos);
     
     recieveFrom(buffer);
   }
@@ -73,6 +89,8 @@ private:
   int server_fd_;
   int new_socket_;
   int valread_;
+  int sys_id_in_;
+  int my_id_;
   struct sockaddr_in address_;
   struct ip_mreq mreq_;
   
@@ -80,7 +98,13 @@ private:
   socklen_t addrlen_;
   char* msg_;
 
+  std::vector<int> system_ids_;
+  
   void recieveFrom(char buffer[]);
+  void idPublisher();
+  
+  rclcpp::Publisher<std_msgs::msg::UInt16MultiArray>::SharedPtr system_id_pub_;
+
 };
 
 void HeartbeatServer::recieveFrom(char buffer[])
@@ -97,9 +121,25 @@ void HeartbeatServer::recieveFrom(char buffer[])
 	  exit(EXIT_FAILURE);
 	}
       buffer[nbytes] = '\0';
+      sys_id_in_ = std::stoi(buffer);
+
+      if ((!(std::count(system_ids_.begin(), system_ids_.end(), sys_id_in_))) && (sys_id_in_ != my_id_))
+	{
+	  system_ids_.push_back(sys_id_in_);
+	}
+      
       
       RCLCPP_INFO_STREAM(this->get_logger(), "got heartbeat from "<<buffer);
     }
+}
+
+void HeartbeatServer::idPublisher()
+{
+  std_msgs::msg::UInt16MultiArray msg;
+  msg.data.clear();
+  msg.data.insert(msg.data.end(), system_ids_.begin(), system_ids_.end());
+
+  system_id_pub_ -> publish(msg);
 }
 
 int main(int argc, char * argv[])

@@ -19,6 +19,9 @@
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "geometry_msgs/msg/pose_array.hpp"
 #include "geometry_msgs/msg/pose.hpp"
+#include "std_msgs/msg/u_int16_multi_array.hpp"
+
+#include "domain_bridge/domain_bridge.hpp"
 #include "system_interface/agent_tracker.hpp"
 
 using namespace std::chrono;
@@ -71,7 +74,8 @@ private:
   std::vector<rclcpp::Subscription<sensor_msgs::msg::NavSatFix>::SharedPtr> gps_references;
   rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr local_pose_sub_;
   rclcpp::Subscription<sensor_msgs::msg::NavSatFix>::SharedPtr internal_gps_sub_;
-
+  rclcpp::Subscription<std_msgs::msg::UInt16MultiArray>::SharedPtr external_sysid_sub_;
+  
   rclcpp::Publisher<geometry_msgs::msg::PoseArray>::SharedPtr system_pose_pub_;
 
   rclcpp::TimerBase::SharedPtr timer_;
@@ -79,6 +83,7 @@ private:
   void externalGpsCallback(const sensor_msgs::msg::NavSatFix& msg);
   void localCallback(const geometry_msgs::msg::PoseStamped& msg);
   void internalGpsCallback(const sensor_msgs::msg::NavSatFix& msg);
+  void externalSysidCallback(const std_msgs::msg::UInt16MultiArray& msg);
 
   void timerCallback();
 
