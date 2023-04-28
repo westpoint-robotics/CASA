@@ -23,8 +23,9 @@ private:
 
   int my_id_;
   std::vector<uint16_t> system_ids_;
-  std::vector<std::string> bridge_topics_;
-  
+  std::set<std::string> bridged_topics_;
+
+  rclcpp::executors::SingleThreadedExecutor executor_;
   rclcpp::Subscription<std_msgs::msg::UInt16MultiArray>::SharedPtr sys_id_sub_;
   domain_bridge::DomainBridge domain_bridge_;
 
@@ -32,5 +33,6 @@ private:
   
   void sysIdCallback(const std_msgs::msg::UInt16MultiArray& msg);
   void getTopics();
+  void addBridge(std::string topic, std::string type);
 };
 #endif

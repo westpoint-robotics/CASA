@@ -51,22 +51,32 @@ void Bridge::getTopics()
   
   for (it = topic_map_.begin(); it != topic_map_.end(); it++)
     {
-      //RCLCPP_INFO_STREAM(get_logger(),it->first);
-      std::string full_topic = it->first;
-	
+      RCLCPP_INFO_STREAM(get_logger(),it->second[0]);
+      std::string full_topic = it -> first;
+      std::string type = it -> second[0];
       std::vector<std::string> split_str = splitString(full_topic, del);
 
-      for (std::string i: split_str)
-	{
-	  RCLCPP_INFO_STREAM(get_logger(), i << ' ');
-	}
-      try
-	{
-	  RCLCPP_INFO_STREAM(get_logger(), split_str[2]);
-	}
-      catch (...)
-	{
-	  RCLCPP_INFO(get_logger(), "topic not long enough");
-	}
+      for (std::string istr: split_str)
+      	{
+	  // add a domain bridge if the topic is external and hasn't been bridged yet
+      	  if ((istr == "external") && !(bridged_topics_.find(istr) != bridged_topics_.end()))
+	    {
+	      addBridge(full_topic, type);
+	      bridged_topics_.insert(full_topic);
+	    }
+      	}
     }
+  domain_bridge_.add_to_executor(executor_);
+  executor_.spin();
+}
+
+void Bridge::addBridge(std::string topic, std::string type)
+{
+  for (int to_id : system_ids_)
+    {
+      // bride_topic(topic, msg_type, from, to)
+      domain_bridge_.bridge_topic(topic, type, my_id_, to_id);
+      RCLCPP_INFO_STREAM(get_logger(), "bridging from " << my_id_ << " to " << to_id);
+    }
+  
 }
