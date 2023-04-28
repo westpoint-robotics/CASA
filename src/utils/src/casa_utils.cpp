@@ -94,3 +94,30 @@ float intToFloatConversion(int input, int flag)
     }
   return output;
 }
+
+std::vector<std::string> splitString(std::string str, char del)
+{
+  std::vector<std::string> return_vec;
+
+  int i = 0;
+  std::string temp;
+  
+  while (str[i] != '\0')
+    {
+      if (str[i] != del)
+	{
+	  temp += str[i];
+	}
+      else
+	{
+	  if (temp.length() > 1)
+	    {
+	      return_vec.push_back(temp);
+	    }
+	  temp.clear();
+	}
+      i++;
+    }
+
+  return return_vec;
+}

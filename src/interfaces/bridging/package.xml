@@ -12,7 +12,8 @@
   <depend>rclcpp</depend>
   <depend>std_msgs</depend>
   <depend>domain_bridge</depend>
-
+  <depend>utils</depend>
+  
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
 

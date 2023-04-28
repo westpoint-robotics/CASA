@@ -138,7 +138,8 @@ void HeartbeatServer::idPublisher()
   std_msgs::msg::UInt16MultiArray msg;
   msg.data.clear();
   msg.data.insert(msg.data.end(), system_ids_.begin(), system_ids_.end());
-
+  msg.layout.data_offset = system_ids_.size();
+  
   system_id_pub_ -> publish(msg);
 }
 
