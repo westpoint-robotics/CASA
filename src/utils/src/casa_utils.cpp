@@ -95,29 +95,21 @@ float intToFloatConversion(int input, int flag)
   return output;
 }
 
-std::vector<std::string> splitString(std::string str, char del)
+std::vector<std::string> splitString(std::string str, const char del)
 {
   std::vector<std::string> return_vec;
 
-  int i = 0;
-  std::string temp;
+  char* c_arr = new char[str.length()+1];
+  strcpy(c_arr,str.c_str());
   
-  while (str[i] != '\0')
+  char *token = strtok(c_arr, "/");
+  
+  while (token != NULL)
     {
-      if (str[i] != del)
-	{
-	  temp += str[i];
-	}
-      else
-	{
-	  if (temp.length() > 1)
-	    {
-	      return_vec.push_back(temp);
-	    }
-	  temp.clear();
-	}
-      i++;
+      return_vec.push_back(token);
+      token = strtok(NULL, "/");
     }
-
+  delete[] c_arr;
+  
   return return_vec;
 }
