@@ -3,8 +3,6 @@
  * About: Main node
  */
 
-#include <rclcpp/rclcpp.hpp>
-
 #include "bridging/bridge.hpp"
 
 int main(int argc, char * argv[])

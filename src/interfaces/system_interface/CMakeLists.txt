@@ -18,7 +18,7 @@ find_package(domain_bridge REQUIRED)
 
 include_directories(include)
 
-add_executable(system src/system.cpp src/agent_tracker.cpp)
+add_executable(system src/system.cpp src/agent_tracker.cpp src/system_node.cpp)
 add_executable(occupancy_grid src/occupancy_grid.cpp)
 add_executable(heartbeat_server src/heartbeat_server.cpp)
 add_executable(heartbeat_client src/heartbeat_client.cpp)

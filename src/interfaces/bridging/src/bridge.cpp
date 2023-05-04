@@ -12,6 +12,7 @@
 Bridge::Bridge() : Node("bridging")
 {
   // Wait for 5 seconds for topics to populate
+  RCLCPP_INFO(get_logger(), "Bridge waiting for topics to populate");
   rclcpp::sleep_for(std::chrono::seconds(5));
   
   this -> declare_parameter("sys_id", 1);
@@ -28,7 +29,7 @@ Bridge::Bridge() : Node("bridging")
   
   sys_id_sub_ = this -> create_subscription<std_msgs::msg::UInt16MultiArray>(nspc + "/internal/system_ids",
 									     qos,
-									     std::bind(&Bridge::sysIdCallback, this, std::placeholders::_1), options_);
+									     std::bind(&Bridge::sysIdCallback, this, std::placeholders::_1));
 
   timer_ = this -> create_wall_timer(1000ms, std::bind(&Bridge::timerCallback, this), group_);  
 }
@@ -36,7 +37,7 @@ Bridge::Bridge() : Node("bridging")
 
 void Bridge::timerCallback()
 {
-  RCLCPP_INFO(get_logger(),"Looking for topics to bridge");
+  RCLCPP_DEBUG(get_logger(),"Looking for topics to bridge");
   topic_map_ = get_topic_names_and_types();
   extractTopicsAndBridge();
 }
@@ -71,26 +72,23 @@ void Bridge::extractTopicsAndBridge()
       std::string full_topic = it -> first;
       std::string type = it -> second[0];
       std::vector<std::string> split_str = splitString(full_topic, del);
-      RCLCPP_INFO_STREAM(get_logger(),"Topic Name: " << it->first);
+      //RCLCPP_INFO_STREAM(get_logger(),"Topic Name: " << it->first);
       for (std::string istr: split_str)
       	{
 	  // add a domain bridge if the topic is external and hasn't been bridged yet
-	  //RCLCPP_INFO_STREAM(get_logger(), "Topic split: " << istr << " with length: "<< istr.length()); 
-      	  if ((istr == "external")) //&& !(bridged_topics_.find(istr) != bridged_topics_.end()))
+      	  if ((istr == "external") && !(bridged_topics_.count(full_topic)))
 	    {
 	      addBridge(full_topic, type);
 	      bridged_topics_.insert(full_topic);
 	    }
       	}
     }
-  //domain_bridge_.add_to_executor(executor_);
-  //executor_.spin();
 }
 
 
 void Bridge::addBridge(std::string topic, std::string type)
 {
-  RCLCPP_INFO(get_logger(), "bridging");
+  RCLCPP_INFO_STREAM(get_logger(), "bridging: "<<topic);
   domain_bridge::TopicBridgeOptions tbo;
   tbo.callback_group() = group_;
   
