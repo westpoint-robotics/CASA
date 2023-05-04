@@ -1,104 +1,50 @@
-/*!
+/*
  * Author: Jason Hughes
  * Date:   Jan. 2023
  * About:  ROS2 node to interface with the rest of the swarm. 
  */
 
-#include <chrono>
-#include <functional>
-#include <memory>
-#include <string>
-#include <vector>
-#include <stdint.h>
-#include <map>
-#include <iterator>
-#include <rclcpp/rclcpp.hpp>
-#include <rclcpp/qos.hpp>
+#include "system_interface/system.hpp"
 
-#include "sensor_msgs/msg/nav_sat_fix.hpp"
-#include "geometry_msgs/msg/pose_stamped.hpp"
-#include "geometry_msgs/msg/pose_array.hpp"
-#include "geometry_msgs/msg/pose.hpp"
-#include "system_interface/agent_tracker.hpp"
 
-using namespace std::chrono;
-using namespace std::chrono_literals;
-
-class SystemInterface : public rclcpp::Node
+SystemInterface::SystemInterface() : Node("system_interface")
 {
-public:
-  SystemInterface() : Node("system_interface")
-  {
-    rclcpp::QoS qos(10);
-    qos.keep_last(10);
-    qos.best_effort();
-    qos.transient_local();
+  rclcpp::QoS qos(10);
+  qos.keep_last(10);
+  qos.best_effort();
+  qos.transient_local();
 
-    this -> declare_parameter("sys_id", 1);
-    this -> declare_parameter("dropout", 30.0);
-    my_id_ = this -> get_parameter("sys_id").get_parameter_value().get<int>();
-    dropout_ = this -> get_parameter("dropout").get_parameter_value().get<float>();
+  this -> declare_parameter("sys_id", 1);
+  this -> declare_parameter("dropout", 30.0);
+  my_id_ = this -> get_parameter("sys_id").get_parameter_value().get<int>();
+  dropout_ = this -> get_parameter("dropout").get_parameter_value().get<float>();
     
-    namespace_ = "casa" + std::to_string(my_id_);
+  namespace_ = "casa" + std::to_string(my_id_);
     
-    local_pose_sub_ = this -> create_subscription<geometry_msgs::msg::PoseStamped>(namespace_+"/internal/local_position", //update this topic name
-										     qos,
-										     std::bind(&SystemInterface::localCallback, this, std::placeholders::_1));
-    internal_gps_sub_ = this -> create_subscription<sensor_msgs::msg::NavSatFix>(namespace_+"/external/global_position", //update this topic name
+  local_pose_sub_ = this -> create_subscription<geometry_msgs::msg::PoseStamped>(namespace_+"/internal/local_position", //update this topic name
 										 qos,
-										 std::bind(&SystemInterface::internalGpsCallback, this, std::placeholders::_1));
-    //need the number of agents in the swarm 
-    for (int i = 1; i <= 2; i++)
-      {
+										 std::bind(&SystemInterface::localCallback, this, std::placeholders::_1));
+  internal_gps_sub_ = this -> create_subscription<sensor_msgs::msg::NavSatFix>(namespace_+"/external/global_position", //update this topic name
+									       qos,
+									       std::bind(&SystemInterface::internalGpsCallback, this, std::placeholders::_1));
+  //need the number of agents in the swarm 
+  for (int i = 1; i <= 2; i++)
+    {
 	
-	std::string gps_topic = "casa"+std::to_string(i)+"/external/global_position";
+      std::string gps_topic = "casa"+std::to_string(i)+"/external/global_position";
 	
-	if (i != my_id_)
-	  {
-	    auto gps_sub = this -> create_subscription<sensor_msgs::msg::NavSatFix>(gps_topic,
-										    qos,
-										    std::bind(&SystemInterface::externalGpsCallback ,this, std::placeholders::_1));
-            gps_references.push_back(gps_sub);
-           }
-       }
+      if (i != my_id_)
+	{
+	  auto gps_sub = this -> create_subscription<sensor_msgs::msg::NavSatFix>(gps_topic,
+										  qos,
+										  std::bind(&SystemInterface::externalGpsCallback ,this, std::placeholders::_1));
+	  gps_references.push_back(gps_sub);
+	}
+    }
 
-    system_pose_pub_ =this -> create_publisher<geometry_msgs::msg::PoseArray>(namespace_+"/internal/system_poses", qos);
-    timer_ = this -> create_wall_timer(1000ms, std::bind(&SystemInterface::timerCallback, this));
-  }
-
-private:
-
-  std::vector<rclcpp::Subscription<sensor_msgs::msg::NavSatFix>::SharedPtr> gps_references;
-  rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr local_pose_sub_;
-  rclcpp::Subscription<sensor_msgs::msg::NavSatFix>::SharedPtr internal_gps_sub_;
-
-  rclcpp::Publisher<geometry_msgs::msg::PoseArray>::SharedPtr system_pose_pub_;
-
-  rclcpp::TimerBase::SharedPtr timer_;
-  
-  void externalGpsCallback(const sensor_msgs::msg::NavSatFix& msg);
-  void localCallback(const geometry_msgs::msg::PoseStamped& msg);
-  void internalGpsCallback(const sensor_msgs::msg::NavSatFix& msg);
-
-  void timerCallback();
-
-  void posePublisher();
-
-  void checkTime();
-  
-  std::map<int,AgentTracker> system_tracker_; 
-
-  std::vector<int> system_ids_;
-
-  int my_id_;
-  float dropout_;
-  std::string namespace_;
-  
-  int sys_id_in_;
-  float lat_in_, lon_in_, alt_in_;
-  float internal_lat_, internal_lon_;
-  float local_x_, local_y_;
-};
+  system_pose_pub_ =this -> create_publisher<geometry_msgs::msg::PoseArray>(namespace_+"/internal/system_poses", qos);
+  timer_ = this -> create_wall_timer(1000ms, std::bind(&SystemInterface::timerCallback, this));
+}
 
 
 void SystemInterface::timerCallback()
@@ -111,6 +57,7 @@ void SystemInterface::timerCallback()
     }
   
 }
+
 
 void SystemInterface::checkTime()
 {
@@ -199,12 +146,3 @@ void SystemInterface::externalGpsCallback(const sensor_msgs::msg::NavSatFix& msg
 }
 
 
-int main(int argc, char * argv[])
-{
-  
-  rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<SystemInterface>());
-  rclcpp::shutdown();
-  
-  return 0;
-}
