@@ -8,7 +8,6 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
-
 include_directories(include)
 
 add_library(utils src/casa_utils.cpp)
