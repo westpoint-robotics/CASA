@@ -30,3 +30,7 @@ class LocalPose():
     def z(self, z):
         self.z_ = z
         
+    def initializeFromPoint(self, point):
+        self.x_ = point.x
+        self.y_ = point.y
+        self.z_ = point.z
