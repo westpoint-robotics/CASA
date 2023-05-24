@@ -12,7 +12,7 @@ class LocalPose():
     
     @x.setter
     def x(self, x):
-        self x_ = x
+        self.x_ = x
         
     @property
     def y(self):

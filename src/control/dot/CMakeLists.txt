@@ -28,8 +28,14 @@ endif()
 ament_python_install_package(${PROJECT_NAME})
 
 install(PROGRAMS
+  src/allocator_node.py
   src/allocator.py
   DESTINATION lib/${PROJECT_NAME}
 )
+
+install(DIRECTORY
+  launch
+  config
+  DESTINATION share/${PROJECT_NAME})
 
 ament_package()

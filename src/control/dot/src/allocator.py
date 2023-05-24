@@ -8,6 +8,7 @@ About: An implementation of distributed optimal transport (DOT) for task allocat
 import rclpy
 import simplekml
 import math
+import numpy as np
 
 from rclpy.node import Node
 from pykml import parser as kmlparser
@@ -29,22 +30,22 @@ class DOTAllocator(Node):
         super().__init__("Allocator")
         
         self.declare_parameter("sys_id", rclpy.Parameter.Type.INTEGER)
-        self.declare_parameter("threshold", rclpy.Parameter.Type.FLOAT)
-        self.sys_id_ = self.get_parameter("sys_id")
-        self.threshold_ = self.get_parameter("threshold")
+        self.declare_parameter("threshold", rclpy.Parameter.Type.DOUBLE)
+        self.sys_id_ = self.get_parameter("sys_id").value
+        self.threshold_ = self.get_parameter("threshold").value
 
-        topic_namespace = "casa"+str(sys_id)
+        topic_namespace = "casa"+str(self.sys_id_)
         
         self.local_pose_sub_ = self.create_subscription(PoseStamped, topic_namespace+"/internal/local_position",
-                                                        self.poseCallback, 10) 
+                                                        self.localCallback, 10) 
         self.global_pose_sub_ = self.create_subscription(NavSatFix, topic_namespace+"/internal/global_position",
                                                          self.globalCallback, 10)
         self.system_poses_ = self.create_subscription(PoseArray, topic_namespace+"/internal/system_poses",
                                                       self.poseArrayCallback,
                                                       10)
 
-        self.task_publisher_ = self.create_publisher(topic_namespace+"/internal/task",
-                                                     PoseStamped,
+        self.task_publisher_ = self.create_publisher(PoseStamped,
+                                                     topic_namespace+"/internal/task",
                                                      10)
         
         self.timer_ = self.create_timer(0.1, self.cycleCallback)
@@ -54,8 +55,8 @@ class DOTAllocator(Node):
 
         self.task_poses_ = list()
         self.sys_poses_ = list()
-        self.sys_poses_2D_ = np.array()
-        self.task_poses_2D_ = np.array()
+        self.sys_poses_2D_ = np.array([])
+        self.task_poses_2D_ = np.array([])
         
         self.at_task_ = False
         self.task_assigned_ = False
@@ -64,9 +65,10 @@ class DOTAllocator(Node):
         self.num_agents_ = 0
         
         self.planner_ = Planner()
-        
+
+        path = "/home/jason/casa_ws/src/control/dot/tasks/RiverCourtsTasks.kml"
         coords = self.loadTaskLocations(path)
-        globalToLocal(coords)
+        self.globalToLocal(coords)
 
         
     def localCallback(self, msg):
