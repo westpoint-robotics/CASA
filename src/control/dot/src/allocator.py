@@ -188,9 +188,10 @@ class DOTAllocator(Node):
             self.planner_.pi = np.zeros(self.num_agents_, self.num_tasks_).flatten()
             # call the optimization function
             out_matrix = self.planner_.optimize()
-            task_wieghts = out_matrix[self.sys_id_,:]
+            task_wieghts = out_matrix[self.sys_id_-1,:]
             task_number = np.argmax(task_weights)
             goto_task_pose = self.task_poses_2D_[task_number]
+            self.task_assigned_ = True
         else:
             if not self.at_task_:
                 self.publishTask(task)
