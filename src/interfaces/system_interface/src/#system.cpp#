@@ -144,7 +144,7 @@ void SystemInterface::externalCasaCallback(const casa_msgs::msg::CasaInterface& 
 {
   // DEPRACATED
 
-  //rclcpp::Time t = msg.header.stamp;
+  rclcpp::Time t = msg.stamp;
   RCLCPP_INFO_STREAM(this->get_logger(), "id: "<<temp_id);
   sys_id_in_ = msg.sys_id;
   lat_in_ = msg.latitude;
@@ -156,7 +156,7 @@ void SystemInterface::externalCasaCallback(const casa_msgs::msg::CasaInterface& 
       // if the sys_id is in the list, update the data
       system_tracker_.at(sys_id_in_).setLatLon(lat_in_, lon_in_);
       system_tracker_.at(sys_id_in_).setAlt(alt_in_);
-      //system_tracker_.at(sys_id_in_).setTime(t);
+      system_tracker_.at(sys_id_in_).setTime(t);
       system_tracker_.at(sys_id_in_).calcRelativeXY(internal_lat_, internal_lon_, local_x_, local_y_);
     }
   else
