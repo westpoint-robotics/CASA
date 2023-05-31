@@ -1,7 +1,5 @@
 int64 sys_id
 
-time stamp
-
 float64 latitude
 float64 longitude
 float64 altitude

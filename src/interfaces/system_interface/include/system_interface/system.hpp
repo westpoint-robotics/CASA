@@ -48,7 +48,7 @@ private:
   
   rclcpp::TimerBase::SharedPtr timer_;
   
-  void externalCasaCallback(const sensor_msgs::msg::NavSatFix& msg);
+  void externalCasaCallback(const casa_msgs::msg::CasaInterface& msg);
   void localCallback(const geometry_msgs::msg::PoseStamped& msg);
   void internalGpsCallback(const sensor_msgs::msg::NavSatFix& msg);
   void externalSysidCallback(const std_msgs::msg::UInt16MultiArray& msg);
@@ -57,6 +57,7 @@ private:
   void timerCallback();
 
   void posePublisher();
+  void exchangePublisher();
 
   void checkTime();
   

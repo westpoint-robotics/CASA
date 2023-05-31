@@ -42,7 +42,7 @@ SystemInterface::SystemInterface() : Node("system_interface")
 	{
 	  auto casa_sub = this -> create_subscription<casa_msgs::msg::CasaInterface>(casa_topic,
 										     qos,
-										     std::bind(&SystemInterface::externalGpsCallback ,this, std::placeholders::_1));
+										     std::bind(&SystemInterface::externalCasaCallback ,this, std::placeholders::_1));
 	  casa_references_.push_back(casa_sub);
 	}
     }
@@ -57,7 +57,8 @@ SystemInterface::SystemInterface() : Node("system_interface")
 void SystemInterface::timerCallback()
 {
   posePublisher();
-
+  exchangePublisher();
+  
   if (dropout_ != 0)
     {
       checkTime();
@@ -88,10 +89,19 @@ void SystemInterface::exchangePublisher()
 {
   casa_msgs::msg::CasaInterface msg;
 
+  msg.sys_id = my_id_;
+  
   msg.latitude = internal_lat_;
   msg.longitude = internal_lon_;
-  msg.altitude = 
+  msg.altitude = internal_alt_;
+
+  msg.heading = heading_in_;
+
+  msg.assigned_task = 1;
+  msg.battery = 25.02;
+  msg.ekf_healthy = true;
   
+  external_pub_ -> publish(msg);
 }
 
 
@@ -145,7 +155,7 @@ void SystemInterface::externalCasaCallback(const casa_msgs::msg::CasaInterface& 
   // DEPRACATED
 
   //rclcpp::Time t = msg.header.stamp;
-  RCLCPP_INFO_STREAM(this->get_logger(), "id: "<<temp_id);
+  //RCLCPP_INFO_STREAM(this->get_logger(), "id: "<<temp_id);
   sys_id_in_ = msg.sys_id;
   lat_in_ = msg.latitude;
   lon_in_ = msg.longitude;
