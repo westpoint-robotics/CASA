@@ -24,6 +24,9 @@
 #include "std_msgs/msg/u_int16_multi_array.hpp"
 #include "std_msgs/msg/float32.hpp"
 #include "casa_msgs/msg/casa_interface.hpp"
+#include "casa_msgs/msg/casa_pose_array.hpp"
+#include "casa_msgs/msg/casa_poses.hpp"
+#include "casa_msgs/msg/casa_global_pose.hpp"
 
 #include "system_interface/agent_tracker.hpp"
 
@@ -43,7 +46,7 @@ private:
   rclcpp::Subscription<std_msgs::msg::UInt16MultiArray>::SharedPtr external_sysid_sub_;
   rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr heading_sub_;
   
-  rclcpp::Publisher<geometry_msgs::msg::PoseArray>::SharedPtr system_pose_pub_;
+  rclcpp::Publisher<casa_msgs::msg::CasaPoseArray>::SharedPtr system_pose_pub_;
   rclcpp::Publisher<casa_msgs::msg::CasaInterface>::SharedPtr external_pub_;
   
   rclcpp::TimerBase::SharedPtr timer_;
@@ -61,8 +64,8 @@ private:
 
   void checkTime();
   
-  std::map<int,AgentTracker> system_tracker_; 
-
+  std::map<int,int> iter_tracker_; 
+  std::vector<AgentTracker> system_tracker_;
   std::vector<int> system_ids_;
 
   int my_id_;
@@ -70,9 +73,10 @@ private:
   std::string namespace_;
   
   int sys_id_in_;
+  int iterator_;
   float heading_in_;
   float lat_in_, lon_in_, alt_in_;
-  float internal_lat_, internal_lon_, internal_alt_;
+  float internal_lat_, internal_lon_, internal_alt_, internal_heading_;
   float local_x_, local_y_;
 };
 #endif

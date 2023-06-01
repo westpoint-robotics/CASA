@@ -1,3 +1,3 @@
 std_msgs/Header header
 
-casa_msgs/CasaPoses[] pose
+casa_msgs/CasaPoses[] poses
