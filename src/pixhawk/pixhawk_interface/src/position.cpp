@@ -18,6 +18,7 @@
 #include "px4_msgs/msg/vehicle_attitude.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "sensor_msgs/msg/nav_sat_fix.hpp"
+#include "std_msgs/msg/float32.hpp"
 #include "utils/casa_utils.hpp"
 
 using namespace std::chrono;
@@ -46,20 +47,21 @@ public:
     
     local_sub_ = this -> create_subscription<px4_msgs::msg::VehicleLocalPosition>(sys_namespace+"/fmu/out/vehicle_local_position",
 										qos,
-										std::bind(&PixhawkInterface::local_callback, this, std::placeholders::_1));
+										std::bind(&PixhawkInterface::localCallback, this, std::placeholders::_1));
     gps_sub_ = this -> create_subscription<px4_msgs::msg::SensorGps>(sys_namespace+"/fmu/out/vehicle_gps_position",
 									 qos,
-									 std::bind(&PixhawkInterface::gps_callback, this, std::placeholders::_1));
+									 std::bind(&PixhawkInterface::gpsCallback, this, std::placeholders::_1));
 
     attitude_sub_ = this -> create_subscription<px4_msgs::msg::VehicleAttitude>(sys_namespace+"/fmu/out/vehicle_attitude",
 										qos,
-										std::bind(&PixhawkInterface::attitude_callback, this, std::placeholders::_1));
+										std::bind(&PixhawkInterface::attitudeCallback, this, std::placeholders::_1));
 									     
     
-    internal_local_pub_ = this -> create_publisher<geometry_msgs::msg::PoseStamped>(internal_namespace_+"/internal/local_position", qos);
-    external_gps_pub_ = this -> create_publisher<sensor_msgs::msg::NavSatFix>(internal_namespace_+"/external/global_position", qos);
+    local_pub_ = this -> create_publisher<geometry_msgs::msg::PoseStamped>(internal_namespace_+"/internal/local_position", qos);
+    gps_pub_ = this -> create_publisher<sensor_msgs::msg::NavSatFix>(internal_namespace_+"/internal/global_position", qos);
+    heading_pub_ = this -> create_publisher<std_msgs::msg::Float32>(internal_namespace_+"/internal/heading", qos);
     
-    timer_ = this -> create_wall_timer(1000ms, std::bind(&PixhawkInterface::timer_callback, this));
+    timer_ = this -> create_wall_timer(1000ms, std::bind(&PixhawkInterface::timerCallback, this));
 
   }
 
@@ -73,36 +75,41 @@ private:
   float local_x_in_, local_y_in_, local_z_in_;
 
   float quat_x_in_, quat_y_in_, quat_z_in_, quat_w_in_;
+
+  float heading_in_;
   
   rclcpp::Subscription<px4_msgs::msg::VehicleLocalPosition>::SharedPtr local_sub_;
   rclcpp::Subscription<px4_msgs::msg::SensorGps>::SharedPtr gps_sub_;
   rclcpp::Subscription<px4_msgs::msg::VehicleAttitude>::SharedPtr attitude_sub_;
 
-  rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr internal_local_pub_;
-  rclcpp::Publisher<sensor_msgs::msg::NavSatFix>::SharedPtr external_gps_pub_;
-
+  rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr local_pub_;
+  rclcpp::Publisher<sensor_msgs::msg::NavSatFix>::SharedPtr gps_pub_;
+  rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr heading_pub_;
+  
   rclcpp::TimerBase::SharedPtr timer_;
 
-  void local_callback(const px4_msgs::msg::VehicleLocalPosition& msg);
-  void gps_callback(const px4_msgs::msg::SensorGps& msg);
-  void attitude_callback(const px4_msgs::msg::VehicleAttitude& msg);
+  void localCallback(const px4_msgs::msg::VehicleLocalPosition& msg);
+  void gpsCallback(const px4_msgs::msg::SensorGps& msg);
+  void attitudeCallback(const px4_msgs::msg::VehicleAttitude& msg);
   
-  void internal_publisher(float x, float y, float z, float qx, float qy, float qz, float qw);
-  void external_publisher(float lat, float lon, float alt, int sys_id);
-
+  void localPosePublisher(float x, float y, float z, float qx, float qy, float qz, float qw);
+  void globalPosePublisher(float lat, float lon, float alt, int sys_id);
+  void headingPublisher(float heading);
+  
   float int_to_float_conversion(int input, int flag);
   
-  void timer_callback();
+  void timerCallback();
 };
 
 
-void PixhawkInterface::timer_callback()
+void PixhawkInterface::timerCallback()
 {
-  internal_publisher(local_x_in_, local_y_in_, local_z_in_, quat_x_in_, quat_y_in_, quat_z_in_, quat_w_in_);
-  external_publisher(lat_in_, lon_in_, alt_in_, sys_id_);
+  localPosePublisher(local_x_in_, local_y_in_, local_z_in_, quat_x_in_, quat_y_in_, quat_z_in_, quat_w_in_);
+  globalPosePublisher(lat_in_, lon_in_, alt_in_, sys_id_);
+  headingPublisher(heading_in_);
 }
 
-void PixhawkInterface::attitude_callback(const px4_msgs::msg::VehicleAttitude& msg)
+void PixhawkInterface::attitudeCallback(const px4_msgs::msg::VehicleAttitude& msg)
 {
   quat_x_in_ = msg.q[0];
   quat_y_in_ = msg.q[1];
@@ -110,16 +117,16 @@ void PixhawkInterface::attitude_callback(const px4_msgs::msg::VehicleAttitude& m
   quat_w_in_ = msg.q[3];
 }
 
-void PixhawkInterface::local_callback(const px4_msgs::msg::VehicleLocalPosition& msg)
+void PixhawkInterface::localCallback(const px4_msgs::msg::VehicleLocalPosition& msg)
 {
   local_x_in_ = msg.x;
   local_y_in_ = msg.y;
   local_z_in_ = msg.z;
-  
+  heading_in_ = msg.heading;
   RCLCPP_INFO_STREAM_ONCE(this->get_logger(), "ID " << sys_id_ << " connected to pixhawk");
 }
 
-void PixhawkInterface::gps_callback(const px4_msgs::msg::SensorGps& msg)
+void PixhawkInterface::gpsCallback(const px4_msgs::msg::SensorGps& msg)
 {
   lat_in_ = intToFloatConversion(msg.lat, 1);
   lon_in_ = intToFloatConversion(msg.lon, 2);
@@ -127,7 +134,7 @@ void PixhawkInterface::gps_callback(const px4_msgs::msg::SensorGps& msg)
   //RCLCPP_INFO_STREAM(this->get_logger(), "recieved gps message at: "<< sys_id_);
 }
 
-void PixhawkInterface::internal_publisher(float x, float y, float z, float qx, float qy, float qz, float qw)
+void PixhawkInterface::localPosePublisher(float x, float y, float z, float qx, float qy, float qz, float qw)
 {
   geometry_msgs::msg::PoseStamped msg{};
 
@@ -142,10 +149,10 @@ void PixhawkInterface::internal_publisher(float x, float y, float z, float qx, f
 
   msg.header.stamp = this -> get_clock() -> now();
 
-  internal_local_pub_->publish(msg);
+  local_pub_->publish(msg);
 }
 
-void PixhawkInterface::external_publisher(float lat, float lon, float alt, int sys_id)
+void PixhawkInterface::globalPosePublisher(float lat, float lon, float alt, int sys_id)
 {
   sensor_msgs::msg::NavSatFix msg{};
 
@@ -156,9 +163,17 @@ void PixhawkInterface::external_publisher(float lat, float lon, float alt, int s
   msg.header.stamp = this -> get_clock() -> now();
   msg.header.frame_id = std::to_string(sys_id);
 
-  external_gps_pub_->publish(msg);
+  gps_pub_->publish(msg);
 }
 
+void PixhawkInterface::headingPublisher(float heading)
+{
+  std_msgs::msg::Float32 msg{};
+
+  msg.data = heading;
+
+  heading_pub_ -> publish(msg);
+}
 
 int main(int argc, char * argv[])
 {
