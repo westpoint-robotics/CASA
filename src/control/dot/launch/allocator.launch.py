@@ -13,12 +13,11 @@ def generate_launch_description():
 
     config = os.path.join(get_package_share_directory('dot'),
                           'config','task.yaml')
-    sys_id = 1
     
     node1 = Node(package = 'dot',
                 name = 'allocator',
                 executable = 'allocator_node.py',
-                parameters = [{'sys_id': sys_id}, config])
+                parameters = [{'sys_id': 1}, config])
     
     ld.add_action(node1)
 
