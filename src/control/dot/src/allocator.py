@@ -51,7 +51,7 @@ class DOTAllocator(Node):
                                                       self.poseArrayCallback,
                                                       qos)
 
-        self.task_publisher_ = self.create_publisher(PoseStamped,
+        self.task_publisher_ = self.create_publisher(NavSatFix,
                                                      topic_namespace+"/internal/task",
                                                      qos)
         
@@ -92,7 +92,6 @@ class DOTAllocator(Node):
     def poseArrayCallback(self, msg):
         i = 0
         utm_poses = dict()
-        self.get_logger().info("IN callback")
         self.num_agents_ = 1
         for pose in msg.poses:
             self.sys_utm_poses_[pose.sys_id] = (pose.global_pose.easting,pose.global_pose.northing)
@@ -140,25 +139,16 @@ class DOTAllocator(Node):
             iter += 1
             self.num_tasks_ += 1
         
-    def publishTask(self, task_index):
-        task_loc = self.task_locations_[task_index]
-        msg = PoseStamped()
-        msg.pose.position.x = task_loc[0]
-        msg.pose.position.y = task_loc[1]
-        msg.header.frame_id = "task: " + str(task_index)
+    def publishTask(self, task):
+        msg = NavSatFix()
+        msg.latitude = task[0]
+        msg.longitude = task[1]
+        msg.header.frame_id = "task: "
         #msg.header.stamp = self.get_clock().now()
 
         self.task_publisher_.publish(msg)
 
         
-    def publishBlankTask(self):
-        msg = PoseStamped()
-        msg.pose.position.x = 0.0
-        msg.pose.position.y = 0.0
-        msg.header.frame_id = "no task assigned"
-        msg.header.stamp = self.get_clock().now()
-        
-
     def feedbackLoop(self, task):
         #function to check if the agent is near its
         current_pose = [self.my_pose_.x, self.my_pose_y]
@@ -176,7 +166,6 @@ class DOTAllocator(Node):
     def cycleCallback(self):
         # calc distance between myself and all tasks
         # take argmin of matrix
-        self.get_logger().info("num agents: %s" %self.num_agents_)
         if not self.task_assigned_ and self.num_agents_ != 0:
             # optimize
             # create a distance matrix between all agents and all tasks
@@ -188,12 +177,9 @@ class DOTAllocator(Node):
             sys_matrix = np.array(list(sorted_poses.values()))
             task_matrix = np.array(list(self.task_utm_poses_.values()))
             
-            print(sys_matrix)
-            print(task_matrix)
             dist = cdist(sys_matrix, task_matrix, 'euclidean')
+            self.get_logger().info('sys mat: %s'%sys_matrix)
             #set properties in planner
-            self.get_logger().info("num agents: %s" %self.num_agents_)
-            self.get_logger().info("num tasks: %s" %self.num_tasks_)
             self.planner_.n = self.num_agents_
             self.planner_.m = self.num_tasks_
             self.planner_.p = 1.0
@@ -201,15 +187,19 @@ class DOTAllocator(Node):
             self.planner_.pi = np.zeros((self.num_agents_, self.num_tasks_)).flatten()
             # call the optimization function
             out_matrix = self.planner_.optimize()
-            task_wieghts = out_matrix[self.sys_id_-1,:]
+            self.get_logger().info("out matrix: %s" %out_matrix)
+            task_weights = out_matrix[self.sys_id_-1,:]
+            self.get_logger().info("weights: %s" %task_weights)
             task_number = np.argmax(task_weights)
+            
             self.task_ = self.task_locations_[task_number]
             self.task_assigned_ = True
+            self.get_logger().info("Agent %s assigned to task %s at %s " %(self.sys_id_, task_number, self.task_) )
+            self.publishTask(self.task_) 
         else:
-            if not self.at_task_:
+            if not self.at_task_ and self.task_assigned_:
                 self.publishTask(self.task_)
             else:
-                self.publishBlankTask()
                 self.task_assigned_ = False
 
 

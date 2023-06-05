@@ -75,7 +75,7 @@ class Planner:
 
 
     def setConstraint(self, start, stop):
-        return lambda u: self.p_ - np.sum(u[start:stop])
+        return lambda u: np.sum(u[start:stop]) - self.p_
         
 
     def optimize(self):

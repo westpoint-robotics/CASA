@@ -14,6 +14,6 @@ pl.dist = 25*np.random.rand(n,m).flatten()
 pl.p = 1.0
 pl.pi = np.zeros((n,m)).flatten()
 
-s = pl.optimize()
+res = pl.optimize()
 
 print(res.reshape(n,m))
