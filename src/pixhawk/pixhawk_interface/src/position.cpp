@@ -12,7 +12,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp/qos.hpp>
 
-#include "px4_msgs/msg/sensor_gps.hpp"
+#include "px4_msgs/msg/vehicle_global_position.hpp"
 #include "px4_msgs/msg/vehicle_status.hpp"
 #include "px4_msgs/msg/vehicle_local_position.hpp"
 #include "px4_msgs/msg/vehicle_attitude.hpp"
@@ -48,7 +48,7 @@ public:
     local_sub_ = this -> create_subscription<px4_msgs::msg::VehicleLocalPosition>(sys_namespace+"/fmu/out/vehicle_local_position",
 										qos,
 										std::bind(&PixhawkInterface::localCallback, this, std::placeholders::_1));
-    gps_sub_ = this -> create_subscription<px4_msgs::msg::SensorGps>(sys_namespace+"/fmu/out/vehicle_gps_position",
+    gps_sub_ = this -> create_subscription<px4_msgs::msg::VehicleGlobalPosition>(sys_namespace+"/fmu/out/vehicle_global_position",
 									 qos,
 									 std::bind(&PixhawkInterface::gpsCallback, this, std::placeholders::_1));
 
@@ -79,7 +79,7 @@ private:
   float heading_in_;
   
   rclcpp::Subscription<px4_msgs::msg::VehicleLocalPosition>::SharedPtr local_sub_;
-  rclcpp::Subscription<px4_msgs::msg::SensorGps>::SharedPtr gps_sub_;
+  rclcpp::Subscription<px4_msgs::msg::VehicleGlobalPosition>::SharedPtr gps_sub_;
   rclcpp::Subscription<px4_msgs::msg::VehicleAttitude>::SharedPtr attitude_sub_;
 
   rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr local_pub_;
@@ -89,7 +89,7 @@ private:
   rclcpp::TimerBase::SharedPtr timer_;
 
   void localCallback(const px4_msgs::msg::VehicleLocalPosition& msg);
-  void gpsCallback(const px4_msgs::msg::SensorGps& msg);
+  void gpsCallback(const px4_msgs::msg::VehicleGlobalPosition& msg);
   void attitudeCallback(const px4_msgs::msg::VehicleAttitude& msg);
   
   void localPosePublisher(float x, float y, float z, float qx, float qy, float qz, float qw);
@@ -126,12 +126,12 @@ void PixhawkInterface::localCallback(const px4_msgs::msg::VehicleLocalPosition& 
   RCLCPP_INFO_STREAM_ONCE(this->get_logger(), "ID " << sys_id_ << " connected to pixhawk");
 }
 
-void PixhawkInterface::gpsCallback(const px4_msgs::msg::SensorGps& msg)
+void PixhawkInterface::gpsCallback(const px4_msgs::msg::VehicleGlobalPosition& msg)
 {
-  lat_in_ = intToFloatConversion(msg.lat, 1);
-  lon_in_ = intToFloatConversion(msg.lon, 2);
-  alt_in_ = intToFloatConversion(msg.alt, 0);
-  //RCLCPP_INFO_STREAM(this->get_logger(), "recieved gps message at: "<< sys_id_);
+  lat_in_ = msg.lat;
+  lon_in_ = msg.lon;
+  alt_in_ = msg.alt;
+  //RCLCPP_INFO_STREAM(this->get_logger(), "recieved gps message at: "<< lat_in_ << ", " << lon_in_);
 }
 
 void PixhawkInterface::localPosePublisher(float x, float y, float z, float qx, float qy, float qz, float qw)

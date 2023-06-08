@@ -32,7 +32,7 @@ class DOTAllocator(Node):
         super().__init__("Allocator")
 
         qos = QoSProfile(reliability = QoSReliabilityPolicy.BEST_EFFORT,
-                         durabilty = QoSDurabilityPolicy.TRANSIENT_LOCAL,
+                         durability =  QoSDurabilityPolicy.TRANSIENT_LOCAL,
                          history = QoSHistoryPolicy.KEEP_LAST,
                          depth = 10 )
         
@@ -67,6 +67,7 @@ class DOTAllocator(Node):
         self.at_task_ = False
         self.task_assigned_ = False
         self.task_ = 0
+        self.task_number_ = None
         
         self.num_tasks_ = 0
         self.num_agents_ = 0
@@ -94,7 +95,10 @@ class DOTAllocator(Node):
         utm_poses = dict()
         self.num_agents_ = 1
         for pose in msg.poses:
-            self.sys_utm_poses_[pose.sys_id] = (pose.global_pose.easting,pose.global_pose.northing)
+            lat = pose.global_pose.latitude
+            lon = pose.global_pose.longitude
+            (zone, east, north) = LLtoUTM(23, lat, lon)
+            self.sys_utm_poses_[pose.sys_id] = (east, north)
             self.num_agents_ += 1
             
         
@@ -139,11 +143,11 @@ class DOTAllocator(Node):
             iter += 1
             self.num_tasks_ += 1
         
-    def publishTask(self, task):
+    def publishTask(self, task, task_iter):
         msg = NavSatFix()
         msg.latitude = task[0]
         msg.longitude = task[1]
-        msg.header.frame_id = "task: "
+        msg.header.frame_id = "task: "+ str(task_iter)
         #msg.header.stamp = self.get_clock().now()
 
         self.task_publisher_.publish(msg)
@@ -173,13 +177,15 @@ class DOTAllocator(Node):
             keys = list(self.sys_utm_poses_.keys())
             keys.sort()
             sorted_poses = {i: self.sys_utm_poses_[i] for i in keys}
-
             sys_matrix = np.array(list(sorted_poses.values()))
             task_matrix = np.array(list(self.task_utm_poses_.values()))
-            
+
+            #if you are at a task an going to another one, make sure you cant go to the task youre at
+            if self.task_number_ != None:
+                task_matrix[self.task_number_] = np.Inf
+                
             dist = cdist(sys_matrix, task_matrix, 'euclidean')
-            self.get_logger().info('sys mat: %s'%sys_matrix)
-            #set properties in planner
+            
             self.planner_.n = self.num_agents_
             self.planner_.m = self.num_tasks_
             self.planner_.p = 1.0
@@ -187,18 +193,18 @@ class DOTAllocator(Node):
             self.planner_.pi = np.zeros((self.num_agents_, self.num_tasks_)).flatten()
             # call the optimization function
             out_matrix = self.planner_.optimize()
-            self.get_logger().info("out matrix: %s" %out_matrix)
             task_weights = out_matrix[self.sys_id_-1,:]
-            self.get_logger().info("weights: %s" %task_weights)
-            task_number = np.argmax(task_weights)
+
+            self.task_number_ = np.argmax(task_weights)
             
-            self.task_ = self.task_locations_[task_number]
+            self.task_ = self.task_locations_[self.task_number_]
             self.task_assigned_ = True
-            self.get_logger().info("Agent %s assigned to task %s at %s " %(self.sys_id_, task_number, self.task_) )
-            self.publishTask(self.task_) 
+            self.get_logger().info("Agent %s assigned to task %s at %s " %(self.sys_id_, self.task_number_, self.task_) )
+
+            self.publishTask(self.task_, self.task_number_) 
         else:
             if not self.at_task_ and self.task_assigned_:
-                self.publishTask(self.task_)
+                self.publishTask(self.task_, self.task_number_)
             else:
                 self.task_assigned_ = False
 

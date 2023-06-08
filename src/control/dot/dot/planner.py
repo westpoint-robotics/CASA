@@ -13,6 +13,7 @@ class Planner:
 
         self.n_ = 1
         self.m_ = 1
+
         
     @property
     def p(self):
@@ -74,10 +75,14 @@ class Planner:
         self.m_ = m
 
 
-    def setConstraint(self, start, stop):
+    def setRowConstraint(self, start, stop):
         return lambda u: np.sum(u[start:stop]) - self.p_
-        
 
+    
+    def setColumnConstraint(self, i):
+        return lambda u: self.p_ - np.sum(u.reshape(self.n_,self.m_)[:,i])
+
+    
     def optimize(self):
 
         func = lambda u: np.matmul(self.dist, u)
@@ -88,11 +93,15 @@ class Planner:
         stop = self.m_
         
         for i in range(self.n_):
-            x = self.setConstraint(start,stop)
+            x = self.setRowConstraint(start,stop)
             cons.append( {'type': 'eq', 'fun': x} )
             start = stop
             stop = stop + self.m_
-                
+
+        for i in range(self.m_):
+            y = self.setColumnConstraint(i)
+            cons.append( {'type': 'ineq', 'fun': y} )
+            
         bnds = np.zeros((len(self.pi_),2))
         bnds[:,1] = self.p_
         
