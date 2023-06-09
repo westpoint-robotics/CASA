@@ -51,7 +51,7 @@ class DOTAllocator(Node):
                                                       self.poseArrayCallback,
                                                       qos)
 
-        self.task_publisher_ = self.create_publisher(NavSatFix,
+        self.task_publisher_ = self.create_publisher(PoseStamped,
                                                      topic_namespace+"/internal/task",
                                                      qos)
         
@@ -100,7 +100,17 @@ class DOTAllocator(Node):
             (zone, east, north) = LLtoUTM(23, lat, lon)
             self.sys_utm_poses_[pose.sys_id] = (east, north)
             self.num_agents_ += 1
-            
+
+
+    def globalToLocal(self, easting, northing):
+        # convert from utm to local frame in 2D
+        easting_diff = self.my_utm_pose_[0] - easting
+        northing_diff = self.my_utm_pose_[1] - northing
+        local_x = self.my_pose_.x + easting_diff
+        local_y = self.my_pose_.y + northing_diff
+
+        return local_x, local_y
+    
         
     def loadTaskPlacemarkers(self, placemarkers):    
         coords = []
@@ -142,13 +152,13 @@ class DOTAllocator(Node):
             self.task_locations_[iter] = (lat, lon)
             iter += 1
             self.num_tasks_ += 1
-        
+
+            
     def publishTask(self, task, task_iter):
-        msg = NavSatFix()
-        msg.latitude = task[0]
-        msg.longitude = task[1]
+        msg = PoseStamped()
+        msg.pose.position.x = task[0]
+        msg.pose.position.y = task[1]
         msg.header.frame_id = "task: "+ str(task_iter)
-        #msg.header.stamp = self.get_clock().now()
 
         self.task_publisher_.publish(msg)
 
@@ -198,10 +208,12 @@ class DOTAllocator(Node):
             self.task_number_ = np.argmax(task_weights)
             
             self.task_ = self.task_locations_[self.task_number_]
+            task_utm = self.task_utm_poses_[self.task_number_]
+            local_x, local_y = globalToLocal(task_utm[0], task_utm[1])          
             self.task_assigned_ = True
             self.get_logger().info("Agent %s assigned to task %s at %s " %(self.sys_id_, self.task_number_, self.task_) )
 
-            self.publishTask(self.task_, self.task_number_) 
+            self.publishTask((local_x, local_y), self.task_number_) 
         else:
             if not self.at_task_ and self.task_assigned_:
                 self.publishTask(self.task_, self.task_number_)
