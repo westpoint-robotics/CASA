@@ -80,14 +80,15 @@ class DOTAllocator(Node):
         
         self.num_tasks_ = 0
         self.num_agents_ = 0
+        self.counter_ = 0
         
         self.planner_ = Planner()
 
         self.loaded_files_ = list()
         user = os.getlogin()
         self.path_ = "/home/" + user + "/"+self.path_
-        coords = self.loadTaskLocations()
-        self.taskCoordsToUtmAndLocal(coords)
+        #coords = self.loadTaskLocations()
+        #self.taskCoordsToUtmAndLocal(coords)
         #self.assignTask()
         
         
@@ -119,17 +120,8 @@ class DOTAllocator(Node):
         # convert from utm to local frame in 2D
         easting0 = self.my_utm_pose_[0] - self.my_pose_.x
         northing0 = self.my_utm_pose_[1] - self.my_pose_.y
-        self.get_logger().info("my utm east: %s" %self.my_utm_pose_[0])
-        self.get_logger().info("easting: %s" %easting)
-        self.get_logger().info("easting0: %s" %easting)
-        self.get_logger().info("northing: %s" %northing)
         local_x = easting - easting0
         local_y = northing - northing0
-        self.get_logger().info("local coord: %s, %s" %(local_x, local_y))
-        #easting_diff = self.my_utm_pose_[0] - easting
-        #northing_diff = self.my_utm_pose_[1] - northing
-        #local_x = self.my_pose_.x + easting_diff
-        #local_y = self.my_pose_.y + northing_diff
 
         return local_x, local_y
     
@@ -217,32 +209,40 @@ class DOTAllocator(Node):
         # create a distance matrix between all agents and all tasks                                 
         self.first_assign_ = True
 
+        #organize the poses of agents and tasks
         self.sys_utm_poses_[self.sys_id_] = self.my_utm_pose_                                       
         keys = list(self.sys_utm_poses_.keys())                                                     
         keys.sort()                                                                                 
         sorted_poses = {i: self.sys_utm_poses_[i] for i in keys}                                    
         sys_matrix = np.array(list(sorted_poses.values()))                                          
         task_matrix = np.array(self.task_utm_poses_)
-            
+
+        # calc the euclidean distance matrix
         dist = cdist(sys_matrix, task_matrix, 'euclidean')                                          
-          
+
+        # set the optimization parameters
         self.planner_.n = self.num_agents_                                                          
         self.planner_.m = len(self.task_utm_poses_)                                                 
         self.planner_.p = 1.0                                                                       
         self.planner_.dist = dist.flatten()                                                         
         self.planner_.pi = np.zeros((self.planner_.n, self.planner_.m)).flatten()                   
+
         # call the optimization function                                                            
         out_matrix = self.planner_.optimize()                                                       
         task_weights = out_matrix[self.sys_id_-1,:]                                                 
+
         self.get_logger().info("local list: %s" %(self.task_local_poses_))
+
+        # interperet the output of the optimizer
         self.task_number_ = np.argmax(task_weights)                                                
         self.task_ = self.task_locations_[self.task_number_]                                        
-        task_utm = self.task_utm_poses_[self.task_number_]
-       
-        self.task_x_, self.task_y_ = self.globalToLocal(task_utm[0], task_utm[1])                   
-        self.get_logger().info("Agent %s assigned to task %s at %s " %(self.sys_id_, self.task_number_, task_utm))
+        task_local = self.task_local_poses_[self.task_number_]
+        self.task_y_, self.task_x_ = task_local[0], task_local[1]
+
+        self.get_logger().info("Agent %s assigned to task %s at %s " %(self.sys_id_, self.task_number_, task_local))
         
         self.publishTask((self.task_x_,self.task_y_), self.task_number_)                           
+
         #remove the task we just assigned
         self.task_utm_poses_.pop(self.task_number_)
 
@@ -251,14 +251,32 @@ class DOTAllocator(Node):
         # calc distance between myself and all tasks
         # take argmin of matrix
         
-        if self.checkThreshold() and self.num_agents_ > 0:
-            self.assignTask()
-        elif self.num_agents_ > 0:
+        if self.checkThreshold() and self.num_agents_ > 0 and self.my_utm_pose_[0] != 0:
+            if self.counter_ < 1:
+                # 
+                coords = self.loadTaskLocations()
+                self.taskCoordsToUtmAndLocal(coords)
+                self.assignTask()
+                self.counter_ += 1
+            else:
+                self.assignTask()
+                self.counter_ += 1
+        elif self.num_agents_ > 0 and self.my_utm_pose_[0] != 0:
             if self.first_assign_:
                 self.publishTask((self.task_x_,self.task_y_), self.task_number_)
             else:
-                self.assignTask()
-        
-        coords = self.loadTaskLocations()
-        self.taskCoordsToUtmAndLocal(coords)
+                if self.counter_ < 1:
+                    coords = self.loadTaskLocations()
+                    self.taskCoordsToUtmAndLocal(coords)
+                    self.assignTask()
+                    self.counter_ += 1
+
+        # TODO:
+        # 1. error handling if no tasks in queue
+        # 2. handling uploading multiple tasks -- NEEDS TESTING
+        # 3. Wait at task for 3 seconds before assigning next one
+        # 4. more than two agents
+                    
+        #coords = self.loadTaskLocations()
+        #self.taskCoordsToUtmAndLocal(coords)
 
