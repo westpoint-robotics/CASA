@@ -75,6 +75,7 @@ class DOTAllocator(Node):
         self.task_assigned_ = False
         self.first_assign_ = False
         self.got_my_pose_ = False
+        self.going_home_ = False
         self.task_ = 0
         self.task_number_ = None
         
@@ -174,6 +175,7 @@ class DOTAllocator(Node):
 
             
     def publishTask(self, task, task_iter):
+        # publish the task coordinates in the local frame 
         msg = PoseStamped()
         msg.pose.position.x = task[0]
         msg.pose.position.y = task[1]
@@ -181,6 +183,16 @@ class DOTAllocator(Node):
 
         self.task_publisher_.publish(msg)
 
+
+    def publishHome(self):
+        # function to publish (0,0) when agent needs to go home
+        msg = PoseStamped()
+        msg.pose.position.x = 0.0
+        msg.pose.position.y = 0.0
+        msg.header.frame_id = "home"
+
+        self.task_publisher_.publish(msg)
+        
         
     def feedbackLoop(self, task):
         #function to check if the agent is near its
@@ -209,6 +221,11 @@ class DOTAllocator(Node):
         # create a distance matrix between all agents and all tasks                                 
         self.first_assign_ = True
 
+        if len(self.task_utm_poses_) == 0:
+            self.get_logger().info("No tasks in queue, returning home")
+            self.going_home_ = True
+            return 0
+        
         #organize the poses of agents and tasks
         self.sys_utm_poses_[self.sys_id_] = self.my_utm_pose_                                       
         keys = list(self.sys_utm_poses_.keys())                                                     
@@ -231,8 +248,6 @@ class DOTAllocator(Node):
         out_matrix = self.planner_.optimize()                                                       
         task_weights = out_matrix[self.sys_id_-1,:]                                                 
 
-        self.get_logger().info("local list: %s" %(self.task_local_poses_))
-
         # interperet the output of the optimizer
         self.task_number_ = np.argmax(task_weights)                                                
         self.task_ = self.task_locations_[self.task_number_]                                        
@@ -245,11 +260,16 @@ class DOTAllocator(Node):
 
         #remove the task we just assigned
         self.task_utm_poses_.pop(self.task_number_)
+        self.task_local_poses_.pop(self.task_number_)
 
         
     def cycleCallback(self):
         # calc distance between myself and all tasks
         # take argmin of matrix
+
+        if self.going_home_:
+            self.publishHome()
+            return 0
         
         if self.checkThreshold() and self.num_agents_ > 0 and self.my_utm_pose_[0] != 0:
             if self.counter_ < 1:
