@@ -42,6 +42,7 @@ private:
   void statusCallback(const px4_msgs::msg::VehicleStatus& msg);
   void publishControlMode();
   void publishTrajectory();
+  void publishVehicleCommand(uint16_t command, float param1, float param2);
 };
 
 GoToTask::GoToTask() : Node("goto_task")
@@ -54,12 +55,12 @@ GoToTask::GoToTask() : Node("goto_task")
   
   // get sys_id
   this -> declare_parameter("sys_id", 1);
-  this -> declare_parameter("altitude", 10);
+  this -> declare_parameter("altitude", 10.1);
   my_id_ = this -> get_parameter("sys_id").get_parameter_value().get<int>();
   alt_ = this -> get_parameter("altitude").get_parameter_value().get<float>();
   
   std::string pub_namespace = "/px4_" + std::to_string(my_id_);
-  std::string sub_namespace = "/casa_" + std::to_string(my_id_);
+  std::string sub_namespace = "/casa" + std::to_string(my_id_);
   
   control_mode_pub_ = this -> create_publisher<px4_msgs::msg::OffboardControlMode>(pub_namespace+"/fmu/in/offboard_control_mode", qos);
   vehicle_command_pub_ = this -> create_publisher<px4_msgs::msg::VehicleCommand>(pub_namespace+"/fmu/in/vehicle_command", qos);
@@ -78,7 +79,9 @@ GoToTask::GoToTask() : Node("goto_task")
 										    std::placeholders::_1));
   
   timer_ = this -> create_wall_timer(10ms, std::bind(&GoToTask::cycleCallback, this));
-  
+
+  publishVehicleCommand(px4_msgs::msg::VehicleCommand::VEHICLE_CMD_DO_SET_MODE, 1, 6);
+  RCLCPP_INFO(this->get_logger(), "Setting mode to offboard");
 }
 
 void GoToTask::cycleCallback()
@@ -88,7 +91,10 @@ void GoToTask::cycleCallback()
   if (status_.nav_state == px4_msgs::msg::VehicleStatus::NAVIGATION_STATE_OFFBOARD)
     {
       //publish point from task
+      publishTrajectory();
+      RCLCPP_INFO_ONCE(this->get_logger(), "Offboard mode detected, sending to pixhawk");
     }
+
 }
 
 
@@ -96,6 +102,7 @@ void GoToTask::taskCallback(const geometry_msgs::msg::PoseStamped& msg)
 {
   task_x_in_ = msg.pose.position.x;
   task_y_in_ = msg.pose.position.y;
+  RCLCPP_INFO_ONCE(this->get_logger(), "Pixhawk recieved command from task");
 }
 
 
@@ -120,11 +127,28 @@ void GoToTask::publishControlMode()
 void GoToTask::publishTrajectory()
 {
   px4_msgs::msg::TrajectorySetpoint msg;
-  msg.position = {task_x_in_, task_y_in_, alt_};
+  msg.position = {task_x_in_, task_y_in_, -5.0};
   msg.timestamp = this -> get_clock() -> now().nanoseconds()/1000;
   // TODO: calculate heading in radians
 
   trajectory_pub_ -> publish(msg);
+}
+
+
+void GoToTask::publishVehicleCommand(uint16_t command, float param1, float param2)
+{
+  px4_msgs::msg::VehicleCommand msg;
+  msg.param1 = param1;
+  msg.param2 = param2;
+  msg.command = command;
+  msg.target_system = 1;
+  msg.target_component = 1;
+  msg.source_system = 1;
+  msg.source_component = 1;
+  msg.from_external = true;
+  msg.timestamp = this -> get_clock()->now().nanoseconds()/1000;
+
+  vehicle_command_pub_ -> publish(msg);
 }
 
 int main(int argc, char * argv[])

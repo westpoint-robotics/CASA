@@ -22,11 +22,12 @@ add_executable(status src/status.cpp)
 ament_target_dependencies(status rclcpp px4_msgs sensor_msgs geometry_msgs)
 
 add_executable(task_goto src/task_goto.cpp)
-ament_target_dependencies(task_goto rclcpp px4_msgs sensor_msgs)
+ament_target_dependencies(task_goto rclcpp px4_msgs geometry_msgs)
 
 install(TARGETS
   position
   status
+  task_goto
   DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY
