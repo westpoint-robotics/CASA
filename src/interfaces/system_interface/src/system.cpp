@@ -63,7 +63,7 @@ SystemInterface::SystemInterface() : Node("system_interface")
 
   system_pose_pub_ = this -> create_publisher<casa_msgs::msg::CasaPoseArray>(namespace_+"/internal/system_poses", qos);
   external_pub_ = this -> create_publisher<casa_msgs::msg::CasaInterface>(namespace_+"/external/exchange", qos);
-  
+  system_task_pub_ = this -> create_publisher<casa_msgs::msg::CasaTaskArray>(namespace_+"/internal/system_tasks", qos);
   timer_ = this -> create_wall_timer(1000ms, std::bind(&SystemInterface::timerCallback, this));
 }
 
@@ -72,7 +72,8 @@ void SystemInterface::timerCallback()
 {
   posePublisher();
   exchangePublisher();
-  
+  taskPublisher();
+
   if (dropout_ != 0)
     {
       checkTime();
@@ -158,6 +159,27 @@ void SystemInterface::posePublisher()
   
 }
 
+void SystemInterface::taskPublisher()
+{
+  casa_msgs::msg::CasaTaskArray task_arr_msg;
+  std::vector<casa_msgs::msg::CasaTask> sys_tasks;
+  
+  for(unsigned int i = 0; i < system_tracker_.size(); i++)
+    {
+      casa_msgs::msg::CasaTask task_msg;
+      task_msg.sys_id = system_tracker_[i].getSysId();
+      task_msg.assigned_task = system_tracker_[i].getTaskIter();
+
+      sys_tasks.push_back(task_msg);
+    }
+
+  task_arr_msg.system_tasks = sys_tasks;
+  task_arr_msg.header.stamp = this -> get_clock() -> now();
+  task_arr_msg.header.frame_id = "tasks";
+
+  system_task_pub_->publish(task_arr_msg);
+}
+
 
 void SystemInterface::localCallback(const geometry_msgs::msg::PoseStamped& msg)
 {
@@ -197,6 +219,7 @@ void SystemInterface::externalCasaCallback(const casa_msgs::msg::CasaInterface& 
       system_tracker_[iter].setAlt(alt_in_);
       //system_tracker_[iter].setTime(t);
       system_tracker_[iter].setHeading(heading_in_);
+      system_tracker_[iter].setTask(task_in_);
       system_tracker_[iter].calcAndSetUTM(lat_in_, lon_in_);
       system_tracker_[iter].calcRelativeXY(internal_lat_, internal_lon_, local_x_, local_y_);
     }
@@ -205,7 +228,7 @@ void SystemInterface::externalCasaCallback(const casa_msgs::msg::CasaInterface& 
       //create a new agent tracker object.
       RCLCPP_INFO_STREAM(this->get_logger(), "Creating tracker for Agent: " << sys_id_in_);
 
-      AgentTracker agent(sys_id_in_, lat_in_, lon_in_, alt_in_, internal_lat_, internal_lon_, local_x_, local_y_, heading_in_);
+      AgentTracker agent(sys_id_in_, lat_in_, lon_in_, alt_in_, internal_lat_, internal_lon_, local_x_, local_y_, heading_in_, task_in_);
 
       system_ids_.push_back(sys_id_in_);
       system_tracker_.push_back(agent);

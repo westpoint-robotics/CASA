@@ -5,13 +5,14 @@
 
 #include "system_interface/agent_tracker.hpp"
 
-AgentTracker::AgentTracker(int sys_id, float lat, float lon, float alt, float int_lat, float int_lon, float int_x, float int_y, float heading)
+AgentTracker::AgentTracker(int sys_id, float lat, float lon, float alt, float int_lat, float int_lon, float int_x, float int_y, float heading, int task)
 {
   setSysId(sys_id);
   setLatLon(lat, lon);
   setAlt(alt);
   setHeading(heading);
-
+  setTask(task);
+  
   calcAndSetUTM(lat, lon);
   calcRelativeXY(int_lat, int_lon, int_x, int_y);
 }
@@ -28,6 +29,7 @@ AgentTracker::AgentTracker(const AgentTracker &a)
   easting_ = a.easting_;
   northing_ = a.northing_;
   heading_ = a.heading_;
+  task_ = a.task_;
 }
 
 void AgentTracker::setSysId(int sys_id)
@@ -78,11 +80,9 @@ void AgentTracker::setEastingNorthing(Eigen::Vector2d utm)
   northing_ = utm[1];
 }
 
-void AgentTracker::setTask(int t, float lat, float lon)
+void AgentTracker::setTask(int t)
 {
   task_ = t;
-  task_lat_  = lat;
-  task_lon_ = lon;
 }
 
 

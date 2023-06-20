@@ -28,7 +28,8 @@
 #include "casa_msgs/msg/casa_pose_array.hpp"
 #include "casa_msgs/msg/casa_poses.hpp"
 #include "casa_msgs/msg/casa_global_pose.hpp"
-
+#include "casa_msgs/msg/casa_task.hpp"
+#include "casa_msgs/msg/casa_task_array.hpp"
 #include "system_interface/agent_tracker.hpp"
 
 using namespace std::chrono;
@@ -50,6 +51,7 @@ private:
   
   rclcpp::Publisher<casa_msgs::msg::CasaPoseArray>::SharedPtr system_pose_pub_;
   rclcpp::Publisher<casa_msgs::msg::CasaInterface>::SharedPtr external_pub_;
+  rclcpp::Publisher<casa_msgs::msg::CasaTaskArray>::SharedPtr system_task_pub_;
   
   rclcpp::TimerBase::SharedPtr timer_;
   
@@ -64,13 +66,14 @@ private:
 
   void posePublisher();
   void exchangePublisher();
-
+  void taskPublisher();
+  
   void checkTime();
   
   std::map<int,int> iter_tracker_; 
   std::vector<AgentTracker> system_tracker_;
   std::vector<int> system_ids_;
-
+  
   int my_id_;
   int my_task_;
   float dropout_;

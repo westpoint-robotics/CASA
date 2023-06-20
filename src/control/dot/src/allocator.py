@@ -18,6 +18,7 @@ from pykml import parser as kmlparser
 from pykml.factory import nsmap
 from geometry_msgs.msg import PoseStamped
 from casa_msgs.msg import CasaPoseArray, CasaPoses
+from casa_msgs.msg import CasaTaskArray, CasaTask
 from sensor_msgs.msg import NavSatFix
 from scipy.spatial.distance import cdist
 
@@ -55,6 +56,10 @@ class DOTAllocator(Node):
                                                       self.poseArrayCallback,
                                                       qos)
 
+        self.system_tasks_ = self.create_subscription(CasaTaskArray, topic_namespace+"/internal/system_tasks",
+                                                      self.taskArrayCallback,
+                                                      qos)
+        
         self.task_publisher_ = self.create_publisher(PoseStamped,
                                                      topic_namespace+"/internal/task",
                                                      qos)
@@ -71,6 +76,7 @@ class DOTAllocator(Node):
         self.task_utm_poses_ = list()
         self.task_local_poses_ = list()
         self.sys_utm_poses_ = dict()
+        self.system_tasks_ = dict()
         self.task_locations_ = dict()
         self.task_x_ = None
         self.task_y_ = None
@@ -123,6 +129,11 @@ class DOTAllocator(Node):
             self.num_agents_ += 1
 
 
+    def taskArrayCallback(self, msg):
+        for task in msg.system_tasks:
+            self.system_tasks_[task.sys_id] = task.assigned_task
+
+            
     def globalToLocal(self, easting, northing):
         # convert from utm to local frame in 2D
         if self.counter_ < 1:
@@ -298,8 +309,6 @@ class DOTAllocator(Node):
         #remove the task we just assigned
         self.task_utm_poses_.pop(self.task_number_)
         self.task_local_poses_.pop(self.task_number_)
-
-        self.deleteTasks(out_matrix)
         
         
     def cycleCallback(self):

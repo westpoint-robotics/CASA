@@ -16,6 +16,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/CasaGlobalPose.msg"
   "msg/CasaPoses.msg"
   "msg/CasaPoseArray.msg"
+  "msg/CasaTask.msg"
+  "msg/CasaTaskArray.msg"
   DEPENDENCIES std_msgs geometry_msgs 
   )
 
