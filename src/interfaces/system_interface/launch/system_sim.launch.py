@@ -20,7 +20,7 @@ def generate_launch_description():
         node =  Node(package = 'system_interface',
                      name = 'casa_'+str(i)+'_system_interface',
                      executable = 'system',
-                     parameters = [{'sys_id': i}])
+                     parameters = [{'sys_id': i, 'use_sim': True, 'num_agents': num_agents}])
 
         ld.add_action(node)
 

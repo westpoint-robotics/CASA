@@ -78,6 +78,14 @@ void AgentTracker::setEastingNorthing(Eigen::Vector2d utm)
   northing_ = utm[1];
 }
 
+void AgentTracker::setTask(int t, float lat, float lon)
+{
+  task_ = t;
+  task_lat_  = lat;
+  task_lon_ = lon;
+}
+
+
 int AgentTracker::getSysId()
 {
   return sys_id_;
@@ -134,6 +142,17 @@ Eigen::Vector2d AgentTracker::getEastingNorthing()
 {
   Eigen::Vector2d en(easting_, northing_);
   return en;
+}
+
+int AgentTracker::getTaskIter()
+{
+  return task_;
+}
+
+Eigen::Vector2d AgentTracker::getTaskLatLon()
+{
+  Eigen::Vector2d ll = {task_lat_, task_lon_};
+  return ll;
 }
 
 Eigen::Vector2d AgentTracker::calcEastingNorthing(float lat, float lon)

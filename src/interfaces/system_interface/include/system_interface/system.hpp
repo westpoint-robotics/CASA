@@ -22,6 +22,7 @@
 #include "geometry_msgs/msg/pose_array.hpp"
 #include "geometry_msgs/msg/pose.hpp"
 #include "std_msgs/msg/u_int16_multi_array.hpp"
+#include "std_msgs/msg/int32.hpp"
 #include "std_msgs/msg/float32.hpp"
 #include "casa_msgs/msg/casa_interface.hpp"
 #include "casa_msgs/msg/casa_pose_array.hpp"
@@ -45,6 +46,7 @@ private:
   rclcpp::Subscription<sensor_msgs::msg::NavSatFix>::SharedPtr global_pose_sub_;
   rclcpp::Subscription<std_msgs::msg::UInt16MultiArray>::SharedPtr external_sysid_sub_;
   rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr heading_sub_;
+  rclcpp::Subscription<std_msgs::msg::Int32>::SharedPtr task_sub_;
   
   rclcpp::Publisher<casa_msgs::msg::CasaPoseArray>::SharedPtr system_pose_pub_;
   rclcpp::Publisher<casa_msgs::msg::CasaInterface>::SharedPtr external_pub_;
@@ -56,6 +58,7 @@ private:
   void internalGpsCallback(const sensor_msgs::msg::NavSatFix& msg);
   void externalSysidCallback(const std_msgs::msg::UInt16MultiArray& msg);
   void headingCallback(const std_msgs::msg::Float32& msg);
+  void myTaskCallback(const std_msgs::msg::Int32& msg);
   
   void timerCallback();
 
@@ -69,11 +72,16 @@ private:
   std::vector<int> system_ids_;
 
   int my_id_;
+  int my_task_;
   float dropout_;
   std::string namespace_;
+
+  bool use_sim_;
   
   int sys_id_in_;
   int iterator_;
+  int num_agents_;
+  int task_in_;
   float heading_in_;
   float lat_in_, lon_in_, alt_in_;
   float internal_lat_, internal_lon_, internal_alt_, internal_heading_;

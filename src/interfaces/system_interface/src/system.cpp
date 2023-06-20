@@ -18,9 +18,17 @@ SystemInterface::SystemInterface() : Node("system_interface")
   
   this -> declare_parameter("sys_id", 1);
   this -> declare_parameter("dropout", 30.0);
+  this -> declare_parameter("use_sim", true);
   my_id_ = this -> get_parameter("sys_id").get_parameter_value().get<int>();
   dropout_ = this -> get_parameter("dropout").get_parameter_value().get<float>();
-    
+  use_sim_ = this -> get_parameter("use_sim").get_parameter_value().get<bool>();
+
+  if (use_sim_ == true)
+  {
+    this -> declare_parameter("num_agents", 3);
+    num_agents_ = this -> get_parameter("num_agents").get_parameter_value().get<int>();
+  }
+  
   namespace_ = "casa" + std::to_string(my_id_);
     
   local_pose_sub_ = this -> create_subscription<geometry_msgs::msg::PoseStamped>(namespace_+"/internal/local_position", //update this topic name
@@ -34,8 +42,11 @@ SystemInterface::SystemInterface() : Node("system_interface")
 								     qos,
 								     std::bind(&SystemInterface::headingCallback, this, std::placeholders::_1));
 
+  task_sub_ = this -> create_subscription<std_msgs::msg::Int32>(namespace_+"/internal/task_number",
+								qos,
+								std::bind(&SystemInterface::myTaskCallback, this, std::placeholders::_1));
   //need the number of agents in the swarm 
-  for (int i = 1; i <= 2; i++)
+  for (int i = 1; i <= num_agents_; i++)
     {
 	
       std::string casa_topic = "casa"+std::to_string(i)+"/external/exchange";
@@ -87,6 +98,11 @@ void SystemInterface::checkTime()
   //  }
 }
 
+void SystemInterface::myTaskCallback(const std_msgs::msg::Int32& msg)
+{
+  my_task_ = msg.data;
+}
+
 
 void SystemInterface::exchangePublisher()
 {
@@ -100,7 +116,7 @@ void SystemInterface::exchangePublisher()
 
   msg.heading = internal_heading_;
 
-  msg.assigned_task = 1;
+  msg.assigned_task = my_task_;
   msg.battery = 25.02;
   msg.ekf_healthy = true;
   
@@ -170,6 +186,7 @@ void SystemInterface::externalCasaCallback(const casa_msgs::msg::CasaInterface& 
   lon_in_ = msg.longitude;
   alt_in_ = msg.altitude;
   heading_in_ = msg.heading;
+  task_in_ = msg.assigned_task;
   
   if (std::count(system_ids_.begin(), system_ids_.end(), sys_id_in_))
     {

@@ -22,12 +22,14 @@ public:
   void setLatLon( float lat, float lon );
   void setAlt( float alt );
   void setRelativeXY( float x, float y);
-
+  void setTask( int t, float lat, float lon );
+  
   //getters
   int getSysId();
   Eigen::Vector2d getLatLon();
   float getAlt();
   Eigen::Vector2d getRelativeXY();
+  int getTaskIter();
 
   void calcRelativeXY(float internal_lat, float internal_lon, float internal_x, float internal_y);
   
@@ -39,6 +41,9 @@ private:
   float alt_;
   float relative_x_;
   float relative_y_;
+  int task_iter_;
+  float task_lat_;
+  float task_lon_;
 };
 #endif
 

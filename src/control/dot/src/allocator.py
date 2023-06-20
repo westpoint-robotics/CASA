@@ -58,6 +58,10 @@ class DOTAllocator(Node):
         self.task_publisher_ = self.create_publisher(PoseStamped,
                                                      topic_namespace+"/internal/task",
                                                      qos)
+
+        self.task_iter_publisher_ = self.create_publisher(Int32,
+                                                          topic_namespace+"/internal/task_number",
+                                                          qos)
         
         self.timer_ = self.create_timer(0.1, self.cycleCallback)
         
@@ -78,6 +82,8 @@ class DOTAllocator(Node):
         self.going_home_ = False
         self.task_ = 0
         self.task_number_ = None
+        self.easting0 = 0
+        self.northing0 = 0
         
         self.num_tasks_ = 0
         self.num_agents_ = 0
@@ -119,10 +125,11 @@ class DOTAllocator(Node):
 
     def globalToLocal(self, easting, northing):
         # convert from utm to local frame in 2D
-        easting0 = self.my_utm_pose_[0] - self.my_pose_.x
-        northing0 = self.my_utm_pose_[1] - self.my_pose_.y
-        local_x = easting - easting0
-        local_y = northing - northing0
+        if self.counter_ < 1:
+            self.easting0 = self.my_utm_pose_[0] - self.my_pose_.x
+            self.northing0 = self.my_utm_pose_[1] - self.my_pose_.y
+        local_x = easting - self.easting0
+        local_y = northing - self.northing0
 
         return local_x, local_y
     
@@ -192,6 +199,12 @@ class DOTAllocator(Node):
         msg.header.frame_id = "home"
 
         self.task_publisher_.publish(msg)
+
+    def publishTaskIter(self):
+        msg = Int32()
+        msg.data = self.task_number_
+
+        self.task_iter_publisher_(msg)
         
         
     def feedbackLoop(self, task):
@@ -215,6 +228,29 @@ class DOTAllocator(Node):
         else:
             return False
 
+
+    def deleteTasks(self, out_matrix):
+        
+        c = 1
+        for i in range(self.planner_.n):
+            if not i+1 == self.sys_id_:
+    
+                weights = out_matrix[i,:]
+                task_iter = np.argmax(weights)
+
+                self.get_logger().info("task iter %s" %task_iter)
+                self.get_logger().info("utm %s" %(self.task_utm_poses_))
+                self.get_logger().info("matrix %s" %(out_matrix))
+
+                if task_iter - c == 0 or task_iter-c < 0:
+                    self.task_utm_poses_.pop(task_iter)
+                    self.task_local_poses_.pop(task_iter)
+                else:
+                    self.task_utm_poses_.pop(task_iter-c)
+                    self.task_local_poses_.pop(task_iter-c)
+
+                c += 1
+        
         
     def assignTask(self):
         # optimize                                                                                   
@@ -253,8 +289,9 @@ class DOTAllocator(Node):
         self.task_ = self.task_locations_[self.task_number_]                                        
         task_local = self.task_local_poses_[self.task_number_]
         self.task_y_, self.task_x_ = task_local[0], task_local[1]
-
-        self.get_logger().info("Agent %s assigned to task %s at %s " %(self.sys_id_, self.task_number_, task_local))
+       
+        
+        self.get_logger().info("Agent %s assigned to task located at %s " %(self.sys_id_, task_local))
         
         self.publishTask((self.task_x_,self.task_y_), self.task_number_)                           
 
@@ -262,23 +299,27 @@ class DOTAllocator(Node):
         self.task_utm_poses_.pop(self.task_number_)
         self.task_local_poses_.pop(self.task_number_)
 
+        self.deleteTasks(out_matrix)
+        
         
     def cycleCallback(self):
         # calc distance between myself and all tasks
         # take argmin of matrix
-
-        if self.going_home_:
+        
+        if self.going_home_: #or len(self.task_utm_poses_)< self.num_agents_ and self.counter_ > 0:
             self.publishHome()
             return 0
         
         if self.checkThreshold() and self.num_agents_ > 0 and self.my_utm_pose_[0] != 0:
             if self.counter_ < 1:
-                # 
                 coords = self.loadTaskLocations()
                 self.taskCoordsToUtmAndLocal(coords)
                 self.assignTask()
                 self.counter_ += 1
             else:
+                self.get_logger().info("At task location, completeing task")
+                time.sleep(3.0)
+                self.get_logger().info("Task completed, assigning new task")
                 self.assignTask()
                 self.counter_ += 1
         elif self.num_agents_ > 0 and self.my_utm_pose_[0] != 0:
@@ -290,13 +331,15 @@ class DOTAllocator(Node):
                     self.taskCoordsToUtmAndLocal(coords)
                     self.assignTask()
                     self.counter_ += 1
+        
+        if self.counter_ >= 1:
+            coords = self.loadTaskLocations()
+            self.taskCoordsToUtmAndLocal(coords)
 
         # TODO:
-        # 1. error handling if no tasks in queue
-        # 2. handling uploading multiple tasks -- NEEDS TESTING
-        # 3. Wait at task for 3 seconds before assigning next one
-        # 4. more than two agents
+        # 1. error handling if no tasks in queue -- DONE
+        # 2. handling uploading multiple tasks -- DONE
+        # 3. Wait at task for 3 seconds before assigning next one -- DONE
+        # 4. more than two agents -- ONGOING
                     
-        #coords = self.loadTaskLocations()
-        #self.taskCoordsToUtmAndLocal(coords)
 
