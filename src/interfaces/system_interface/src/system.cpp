@@ -25,7 +25,7 @@ SystemInterface::SystemInterface() : Node("system_interface")
 
   if (use_sim_ == true)
   {
-    this -> declare_parameter("num_agents", 3);
+    this -> declare_parameter("num_agents", 2);
     num_agents_ = this -> get_parameter("num_agents").get_parameter_value().get<int>();
   }
   
