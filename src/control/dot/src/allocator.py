@@ -76,6 +76,7 @@ class DOTAllocator(Node):
 
         self.task_utm_poses_ = list()
         self.task_local_poses_ = list()
+        self.completed_tasks_ = list()
         self.sys_utm_poses_ = dict()
         self.system_tasks_ = dict()
         self.task_locations_ = dict()
@@ -135,7 +136,8 @@ class DOTAllocator(Node):
     def taskArrayCallback(self, msg):
         for task in msg.system_tasks:
             self.system_tasks_[task.sys_id] = task.assigned_task
-
+        #self.deleteTasks()
+            
             
     def globalToLocal(self, easting, northing):
         # convert from utm to local frame in 2D
@@ -195,7 +197,7 @@ class DOTAllocator(Node):
             x,y = self.globalToLocal(easting,northing)
             self.task_local_poses_.append((x,y))
             self.task_locations_[self.num_tasks_] = (lat, lon)
-            self.master_tasks_[self.num_tasks_] = x
+            self.master_tasks_[self.num_tasks_] = (x,y)
             self.num_tasks_ += 1
 
             
@@ -221,8 +223,7 @@ class DOTAllocator(Node):
         
     def publishTaskIter(self):
         msg = Int32()
-        task_key = list(self.master_tasks_.keys())[list(self.master_tasks_.values()).index(self.task_y_)]
-        msg.data = task_key
+        msg.data = self.getTaskIter((self.task_y_, self.task_x_))
         
         self.task_iter_publisher_.publish(msg)
         
@@ -249,12 +250,28 @@ class DOTAllocator(Node):
             return False
 
 
-    def deleteTasks(self, out_matrix):
-        for iter in self.system_tasks_.keys():
-           self.task_utm_poses_[iter] = (np.inf, np.inf) 
-           self.task_local_poses_[iter] = (np.inf, np.inf)
-           
-        
+    def getTaskIter(self, ind):
+        return list(self.master_tasks_.keys())[list(self.master_tasks_.values()).index(ind)]
+
+    
+    def deleteSysTasks(self):
+        for ag,task in zip(self.system_tasks_.keys(), self.system_tasks_.values()):
+            task_local = self.master_tasks_[task]
+            #try:
+            ind = self.task_local_poses_.index(task_local)
+            if not ind in self.completed_tasks_:
+                b = not ind in self.completed_tasks_
+                self.get_logger().info("entry bool: %s" %b)
+                self.task_local_poses_.pop(ind)
+                self.task_utm_poses_.pop(ind)
+                self.get_logger().info("agent %s sees agent %s going to task %s, deleting" %(self.sys_id_, ag, task))
+                self.completed_tasks_.append(task)
+            else:
+                pass
+                #except (ValueError, IndexError) as e:
+                #    self.get_logger().info("trying to pop task %s, but not found" %task)
+
+                
     def assignTask(self):
         # optimize                                                                                   
         # create a distance matrix between all agents and all tasks                                 
@@ -292,16 +309,18 @@ class DOTAllocator(Node):
         self.task_ = self.task_locations_[self.task_number_]                                        
         task_local = self.task_local_poses_[self.task_number_]
         self.task_y_, self.task_x_ = task_local[0], task_local[1]
-       
+
+        master_task_index = self.getTaskIter(task_local) 
+        self.completed_tasks_.append(master_task_index)
         #inform and publish
-        self.get_logger().info("Agent %s assigned to task located at %s " %(self.sys_id_, task_local))
+        self.get_logger().info("Agent %s assigned to task %s located at %s " %(self.sys_id_, master_task_index, task_local))
         
         self.publishTask((self.task_x_,self.task_y_), self.task_number_)                           
         self.publishTaskIter()
         
         #remove the task we just assigned
-        self.task_utm_poses_[self.task_number_] = (np.inf, np.inf)
-        self.task_local_poses_[self.task_number_] = (np.inf, np.inf)
+        self.task_utm_poses_.pop(self.task_number_)
+        self.task_local_poses_.pop(self.task_number_)
         
         
     def cycleCallback(self):
@@ -328,6 +347,7 @@ class DOTAllocator(Node):
             if self.first_assign_:
                 self.publishTask((self.task_x_,self.task_y_), self.task_number_)
                 self.publishTaskIter()
+                self.deleteSysTasks()
             else:
                 if self.counter_ < 1:
                     coords = self.loadTaskLocations()
@@ -339,6 +359,8 @@ class DOTAllocator(Node):
             coords = self.loadTaskLocations()
             self.taskCoordsToUtmAndLocal(coords)
 
+        self.get_logger().info("assigned tasks: %s" %(self.completed_tasks_))
+            
         # TODO:
         # 1. error handling if no tasks in queue -- DONE
         # 2. handling uploading multiple tasks -- DONE
