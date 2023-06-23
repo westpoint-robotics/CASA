@@ -257,19 +257,19 @@ class DOTAllocator(Node):
     def deleteSysTasks(self):
         for ag,task in zip(self.system_tasks_.keys(), self.system_tasks_.values()):
             task_local = self.master_tasks_[task]
-            #try:
-            ind = self.task_local_poses_.index(task_local)
-            if not ind in self.completed_tasks_:
-                b = not ind in self.completed_tasks_
-                self.get_logger().info("entry bool: %s" %b)
-                self.task_local_poses_.pop(ind)
-                self.task_utm_poses_.pop(ind)
-                self.get_logger().info("agent %s sees agent %s going to task %s, deleting" %(self.sys_id_, ag, task))
-                self.completed_tasks_.append(task)
-            else:
-                pass
-                #except (ValueError, IndexError) as e:
-                #    self.get_logger().info("trying to pop task %s, but not found" %task)
+            try:
+                ind = self.task_local_poses_.index(task_local)
+                if not ind in self.completed_tasks_:
+                    b = not ind in self.completed_tasks_
+                    self.get_logger().info("entry bool: %s" %b)
+                    self.task_local_poses_.pop(ind)
+                    self.task_utm_poses_.pop(ind)
+                    self.get_logger().info("agent %s sees agent %s going to task %s, deleting" %(self.sys_id_, ag, task))
+                    self.completed_tasks_.append(task)
+                else:
+                    self.get_logger().info("here")
+            except (ValueError, IndexError) as e:
+                    self.get_logger().info("trying to pop task %s, but not found" %task)
 
                 
     def assignTask(self):

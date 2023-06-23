@@ -3,6 +3,7 @@
  * About: Node to take in task info and send it to the pixhawk
  */
 
+#include <cmath>
 #include <chrono>
 #include <string>
 #include <rclcpp/rclcpp.hpp>
@@ -29,20 +30,26 @@ private:
   
   rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr task_sub_;
   rclcpp::Subscription<px4_msgs::msg::VehicleStatus>::SharedPtr status_sub_;
+  rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr pose_sub_;
   
   rclcpp::TimerBase::SharedPtr timer_;
   
   int my_id_;
   float task_x_in_, task_y_in_, alt_;
-
+  float current_pose_x_, current_pose_y_, current_pose_z_;
+  
   px4_msgs::msg::VehicleStatus status_;
   
   void cycleCallback();
   void taskCallback(const geometry_msgs::msg::PoseStamped& msg);
   void statusCallback(const px4_msgs::msg::VehicleStatus& msg);
+  void poseCallback(const geometry_msgs::msg::PoseStamped& msg);
+  
   void publishControlMode();
   void publishTrajectory();
   void publishVehicleCommand(uint16_t command, float param1, float param2);
+
+  double calculateHeading();
 };
 
 GoToTask::GoToTask() : Node("goto_task")
@@ -77,6 +84,11 @@ GoToTask::GoToTask() : Node("goto_task")
 									  std::bind(&GoToTask::statusCallback,
 										    this,
 										    std::placeholders::_1));
+  pose_sub_ = this -> create_subscription<geometry_msgs::msg::PoseStamped>(sub_namespace+"/internal/local_position",
+									   qos,
+									   std::bind(&GoToTask::poseCallback,
+										     this,
+										     std::placeholders::_1));
   
   timer_ = this -> create_wall_timer(10ms, std::bind(&GoToTask::cycleCallback, this));
 
@@ -111,6 +123,13 @@ void GoToTask::statusCallback(const px4_msgs::msg::VehicleStatus& msg)
   status_ = msg;
 }
 
+void GoToTask::poseCallback(const geometry_msgs::msg::PoseStamped& msg)
+{
+  current_pose_x_ = msg.pose.position.x;
+  current_pose_y_ = msg.pose.position.y;
+  current_pose_z_ = msg.pose.position.z;
+}
+
 
 void GoToTask::publishControlMode()
 {
@@ -128,6 +147,7 @@ void GoToTask::publishTrajectory()
 {
   px4_msgs::msg::TrajectorySetpoint msg;
   msg.position = {task_x_in_, task_y_in_, -5.0};
+  msg.yaw = calculateHeading();
   msg.timestamp = this -> get_clock() -> now().nanoseconds()/1000;
   // TODO: calculate heading in radians
 
@@ -149,6 +169,13 @@ void GoToTask::publishVehicleCommand(uint16_t command, float param1, float param
   msg.timestamp = this -> get_clock()->now().nanoseconds()/1000;
 
   vehicle_command_pub_ -> publish(msg);
+}
+
+double GoToTask::calculateHeading()
+{
+  double heading;
+  heading = atan2(task_y_in_-current_pose_y_, task_x_in_-current_pose_x_);
+  return heading;
 }
 
 int main(int argc, char * argv[])
