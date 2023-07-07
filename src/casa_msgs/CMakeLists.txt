@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(utils)
+project(casa_msgs)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -7,24 +7,18 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(rclcpp REQUIRED)
-include_directories(include)
+find_package(std_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
 
-add_library(utils src/casa_utils.cpp)
-ament_export_targets(utils HAS_LIBRARY_TARGET)
-
-install(
-  DIRECTORY include/utils
-  DESTINATION include
-  )
-
-install(
-  TARGETS utils
-  EXPORT utils
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION lib
-  INCLUDES DESTINATION include
+rosidl_generate_interfaces(${PROJECT_NAME}
+  "msg/CasaInterface.msg"
+  "msg/CasaGlobalPose.msg"
+  "msg/CasaPoses.msg"
+  "msg/CasaPoseArray.msg"
+  "msg/CasaTask.msg"
+  "msg/CasaTaskArray.msg"
+  DEPENDENCIES std_msgs geometry_msgs 
   )
 
 if(BUILD_TESTING)

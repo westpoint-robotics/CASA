@@ -15,6 +15,7 @@ find_package(sensor_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(utils REQUIRED)
 find_package(domain_bridge REQUIRED)
+find_package(casa_msgs REQUIRED)
 
 include_directories(include)
 
@@ -23,7 +24,7 @@ add_executable(occupancy_grid src/occupancy_grid.cpp)
 add_executable(heartbeat_server src/heartbeat_server.cpp src/heartbeat_server_node.cpp)
 add_executable(heartbeat_client src/heartbeat_client.cpp src/heartbeat_client_node.cpp)
 
-ament_target_dependencies(system rclcpp sensor_msgs px4_msgs utils domain_bridge std_msgs)
+ament_target_dependencies(system rclcpp sensor_msgs px4_msgs utils domain_bridge std_msgs casa_msgs)
 ament_target_dependencies(occupancy_grid nav_msgs geometry_msgs utils)
 ament_target_dependencies(heartbeat_server rclcpp std_msgs)
 ament_target_dependencies(heartbeat_client rclcpp std_msgs)
