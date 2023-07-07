@@ -1,9 +1,9 @@
-[submodule "src/communication/px4_msgs"]
-	path = src/communication/px4_msgs
+[submodule "src/pixhawk/px4_msgs"]
+	path = src/pixhawk/px4_msgs
 	url = https://github.com/PX4/px4_msgs
-[submodule "src/communication/uros/micro_ros_msgs"]
-	path = src/communication/uros/micro_ros_msgs
+[submodule "src/pixhawk/uros/micro_ros_msgs"]
+	path = src/pixhawk/uros/micro_ros_msgs
 	url = https://github.com/micro-ROS/micro_ros_msgs
-[submodule "src/communication/uros/micro-ROS-Agent"]
-	path = src/communication/uros/micro-ROS-Agent
+[submodule "src/pixhawk/uros/micro-ROS-Agent"]
+	path = src/pixhawk/uros/micro-ROS-Agent
 	url = https://github.com/micro-ROS/micro-ROS-Agent

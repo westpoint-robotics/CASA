@@ -17,19 +17,10 @@ def generate_launch_description():
 
     for i in range(1,num_agents+1):
         pix_node = Node(package = 'pixhawk_interface',
-                    name = 'casa_'+str(i)+'_pixhawk_position_interface',
-                    executable = 'position',
-                    parameters = [{'sys_id': i}])
+                    name = 'casa_'+str(i)+'_pixhawk_task',
+                    executable = 'task_goto',
+                    parameters = [{'sys_id': i, 'altitude': 10.1}])
 
-        ld.add_action(pix_node)
-        
-        sys_node =  Node(package = 'system_interface',
-                     name = 'casa_'+str(i)+'_system_interface',
-                     executable = 'system',
-                     parameters = [{'sys_id': i}])
-        
-        ld.add_action(sys_node)
-
-        
+        ld.add_action(pix_node)       
         
     return ld

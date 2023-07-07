@@ -15,7 +15,9 @@ class AgentTracker
 public:
 
   //constructor
-  AgentTracker( int sys_id, float lat, float lon, float alt, float int_lat, float int_lon, float int_x, float int_y );
+  AgentTracker( int sys_id, float lat, float lon, float alt, float int_lat, float int_lon, float int_x, float int_y, float heading, int task, int level);
+  //copy constructor
+  AgentTracker(const AgentTracker &a );
   
   //setters
   void setSysId( int sys_id );
@@ -23,13 +25,31 @@ public:
   void setAlt( float alt );
   void setRelativeXY( float x, float y );
   void setTime( rclcpp::Time t );
+  void setEasting( float e );
+  void setNorthing( float n );
+  void setEastingNorthing( Eigen::Vector2d utm );
+  void setHeading( float h );
+  void setTask( int t );
+  void setConnectivityLevel( int l );
+  
   //getters
   int getSysId();
+  float getLat();
+  float getLon();
   Eigen::Vector2d getLatLon();
   float getAlt();
   Eigen::Vector2d getRelativeXY();
   rclcpp::Time getTime();
-
+  float getEasting();
+  float getNorthing();
+  float getHeading();
+  Eigen::Vector2d getEastingNorthing();
+  int getTaskIter();
+  int getConnectivityLevel();
+  Eigen::Vector2d getTaskLatLon();
+  
+  Eigen::Vector2d calcEastingNorthing(float lat, float lon);
+  void calcAndSetUTM(float lat, float lon);
   void calcRelativeXY(float internal_lat, float internal_lon, float internal_x, float internal_y);
   
 private:
@@ -40,6 +60,13 @@ private:
   float alt_;
   float relative_x_;
   float relative_y_;
+  float easting_;
+  float northing_;
+  float heading_;
+  int task_;
+  int level_;
+  float task_lat_;
+  float task_lon_;
   rclcpp::Time time_;
 };
 #endif

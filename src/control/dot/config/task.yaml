@@ -1,0 +1,4 @@
+allocator:
+  ros__parameters:
+    threshold: 3.0
+    path: casa_ws/src/control/dot/tasks/
