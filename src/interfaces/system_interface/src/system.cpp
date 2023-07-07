@@ -64,7 +64,7 @@ SystemInterface::SystemInterface() : Node("system_interface")
   system_pose_pub_ = this -> create_publisher<casa_msgs::msg::CasaPoseArray>(namespace_+"/internal/system_poses", qos);
   external_pub_ = this -> create_publisher<casa_msgs::msg::CasaInterface>(namespace_+"/external/exchange", qos);
   system_task_pub_ = this -> create_publisher<casa_msgs::msg::CasaTaskArray>(namespace_+"/internal/system_tasks", qos);
-  timer_ = this -> create_wall_timer(1000ms, std::bind(&SystemInterface::timerCallback, this));
+  timer_ = this -> create_wall_timer(100ms, std::bind(&SystemInterface::timerCallback, this));
 }
 
 
