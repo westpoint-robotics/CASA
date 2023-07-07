@@ -5,13 +5,14 @@
 
 #include "system_interface/agent_tracker.hpp"
 
-AgentTracker::AgentTracker(int sys_id, float lat, float lon, float alt, float int_lat, float int_lon, float int_x, float int_y, float heading, int task)
+AgentTracker::AgentTracker(int sys_id, float lat, float lon, float alt, float int_lat, float int_lon, float int_x, float int_y, float heading, int task, int level)
 {
   setSysId(sys_id);
   setLatLon(lat, lon);
   setAlt(alt);
   setHeading(heading);
   setTask(task);
+  setConnectivityLevel(level);
   
   calcAndSetUTM(lat, lon);
   calcRelativeXY(int_lat, int_lon, int_x, int_y);
@@ -30,6 +31,7 @@ AgentTracker::AgentTracker(const AgentTracker &a)
   northing_ = a.northing_;
   heading_ = a.heading_;
   task_ = a.task_;
+  level_ = a.level_;
 }
 
 void AgentTracker::setSysId(int sys_id)
@@ -83,6 +85,11 @@ void AgentTracker::setEastingNorthing(Eigen::Vector2d utm)
 void AgentTracker::setTask(int t)
 {
   task_ = t;
+}
+
+void AgentTracker::setConnectivityLevel(int l)
+{
+  level_ = l;
 }
 
 
@@ -147,6 +154,11 @@ Eigen::Vector2d AgentTracker::getEastingNorthing()
 int AgentTracker::getTaskIter()
 {
   return task_;
+}
+
+int AgentTracker::getConnectivityLevel()
+{
+  return level_;
 }
 
 Eigen::Vector2d AgentTracker::getTaskLatLon()

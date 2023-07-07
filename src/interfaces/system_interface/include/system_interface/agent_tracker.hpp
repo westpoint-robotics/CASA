@@ -15,7 +15,7 @@ class AgentTracker
 public:
 
   //constructor
-  AgentTracker( int sys_id, float lat, float lon, float alt, float int_lat, float int_lon, float int_x, float int_y, float heading, int task);
+  AgentTracker( int sys_id, float lat, float lon, float alt, float int_lat, float int_lon, float int_x, float int_y, float heading, int task, int level);
   //copy constructor
   AgentTracker(const AgentTracker &a );
   
@@ -30,6 +30,7 @@ public:
   void setEastingNorthing( Eigen::Vector2d utm );
   void setHeading( float h );
   void setTask( int t );
+  void setConnectivityLevel( int l );
   
   //getters
   int getSysId();
@@ -44,6 +45,7 @@ public:
   float getHeading();
   Eigen::Vector2d getEastingNorthing();
   int getTaskIter();
+  int getConnectivityLevel();
   Eigen::Vector2d getTaskLatLon();
   
   Eigen::Vector2d calcEastingNorthing(float lat, float lon);
@@ -62,6 +64,7 @@ private:
   float northing_;
   float heading_;
   int task_;
+  int level_;
   float task_lat_;
   float task_lon_;
   rclcpp::Time time_;

@@ -61,7 +61,7 @@ SystemInterface::SystemInterface() : Node("system_interface")
 	}
     }
 
-  system_pose_pub_ = this -> create_publisher<casa_msgs::msg::CasaPoseArray>(namespace_+"/internal/system_poses", qos);
+  system_pose_pub_ = this -> create_publisher<casa_msgs::msg::CasaAgentArray>(namespace_+"/internal/system_array", qos);
   external_pub_ = this -> create_publisher<casa_msgs::msg::CasaInterface>(namespace_+"/external/exchange", qos);
   system_task_pub_ = this -> create_publisher<casa_msgs::msg::CasaTaskArray>(namespace_+"/internal/system_tasks", qos);
   timer_ = this -> create_wall_timer(1000ms, std::bind(&SystemInterface::timerCallback, this));
@@ -120,6 +120,7 @@ void SystemInterface::exchangePublisher()
   msg.assigned_task = my_task_;
   msg.battery = 25.02;
   msg.ekf_healthy = true;
+  msg.connectivity_level = conn_level_;
   
   external_pub_ -> publish(msg);
 }
@@ -127,12 +128,12 @@ void SystemInterface::exchangePublisher()
 
 void SystemInterface::posePublisher()
 {
-  casa_msgs::msg::CasaPoseArray poses_arr_msg;
-  std::vector<casa_msgs::msg::CasaPoses> pose_vec;
+  casa_msgs::msg::CasaAgentArray agent_arr_msg;
+  std::vector<casa_msgs::msg::CasaAgent> agent_vec;
 
   for(unsigned int i = 0; i < system_tracker_.size(); i++)
     {
-      casa_msgs::msg::CasaPoses agent_reference_pose;
+      casa_msgs::msg::CasaAgent agent_reference_pose;
 
       agent_reference_pose.global_pose.latitude = system_tracker_[i].getLat();
       agent_reference_pose.global_pose.longitude = system_tracker_[i].getLon();
@@ -145,17 +146,20 @@ void SystemInterface::posePublisher()
       agent_reference_pose.local_pose.y = system_tracker_[i].getRelativeXY()[1];
       agent_reference_pose.local_pose.z = system_tracker_[i].getAlt();
 
+      agent_reference_pose.assigned_task = system_tracker_[i].getTaskIter();
+      agent_reference_pose.connectivity_level = system_tracker_[i].getConnectivityLevel();
+      
       agent_reference_pose.sys_id = system_tracker_[i].getSysId();
       agent_reference_pose.heading = system_tracker_[i].getHeading();
       
-      pose_vec.push_back(agent_reference_pose);
+      agent_vec.push_back(agent_reference_pose);
     }
 
-  poses_arr_msg.poses = pose_vec;
-  poses_arr_msg.header.stamp = this -> get_clock() -> now();
-  poses_arr_msg.header.frame_id = "all";
+  agent_arr_msg.agents = agent_vec;
+  agent_arr_msg.header.stamp = this -> get_clock() -> now();
+  agent_arr_msg.header.frame_id = "all";
 
-  system_pose_pub_->publish(poses_arr_msg);
+  system_pose_pub_->publish(agent_arr_msg);
   
 }
 
@@ -209,7 +213,8 @@ void SystemInterface::externalCasaCallback(const casa_msgs::msg::CasaInterface& 
   alt_in_ = msg.altitude;
   heading_in_ = msg.heading;
   task_in_ = msg.assigned_task;
-  
+  level_in_ = msg.connectivity_level;
+
   if (std::count(system_ids_.begin(), system_ids_.end(), sys_id_in_))
     {
       // if the sys_id is in the list, update the data
@@ -228,7 +233,7 @@ void SystemInterface::externalCasaCallback(const casa_msgs::msg::CasaInterface& 
       //create a new agent tracker object.
       RCLCPP_INFO_STREAM(this->get_logger(), "Creating tracker for Agent: " << sys_id_in_);
 
-      AgentTracker agent(sys_id_in_, lat_in_, lon_in_, alt_in_, internal_lat_, internal_lon_, local_x_, local_y_, heading_in_, task_in_);
+      AgentTracker agent(sys_id_in_, lat_in_, lon_in_, alt_in_, internal_lat_, internal_lon_, local_x_, local_y_, heading_in_, task_in_, level_in_);
 
       system_ids_.push_back(sys_id_in_);
       system_tracker_.push_back(agent);
