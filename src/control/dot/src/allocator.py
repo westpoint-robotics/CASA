@@ -17,7 +17,7 @@ from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy, QoSDur
 from pykml import parser as kmlparser
 from pykml.factory import nsmap
 from geometry_msgs.msg import PoseStamped
-from casa_msgs.msg import CasaPoseArray, CasaPoses
+from casa_msgs.msg import CasaAgentArray, CasaAgent
 from casa_msgs.msg import CasaTaskArray, CasaTask
 from std_msgs.msg import Int32
 from sensor_msgs.msg import NavSatFix
@@ -53,7 +53,7 @@ class DOTAllocator(Node):
                                                         self.localCallback, qos) 
         self.global_pose_sub_ = self.create_subscription(NavSatFix, topic_namespace+"/internal/global_position",
                                                          self.globalCallback, qos)
-        self.system_poses_ = self.create_subscription(CasaPoseArray, topic_namespace+"/internal/system_poses",
+        self.system_poses_ = self.create_subscription(CasaAgentArray, topic_namespace+"/internal/system_array",
                                                       self.poseArrayCallback,
                                                       qos)
 
@@ -125,18 +125,17 @@ class DOTAllocator(Node):
         i = 0
         utm_poses = dict()
         self.num_agents_ = 1
-        for pose in msg.poses:
-            lat = pose.global_pose.latitude
-            lon = pose.global_pose.longitude
+        for ag in msg.agents:
+            lat = ag.global_pose.latitude
+            lon = ag.global_pose.longitude
             (zone, east, north) = LLtoUTM(23, lat, lon)
-            self.sys_utm_poses_[pose.sys_id] = (east, north)
+            self.sys_utm_poses_[ag.sys_id] = (east, north)
             self.num_agents_ += 1
 
 
     def taskArrayCallback(self, msg):
         for task in msg.system_tasks:
             self.system_tasks_[task.sys_id] = task.assigned_task
-        #self.deleteTasks()
             
             
     def globalToLocal(self, easting, northing):
