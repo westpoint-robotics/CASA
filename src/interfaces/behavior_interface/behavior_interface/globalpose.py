@@ -4,7 +4,7 @@ Date: July 2023
 About: Data type for global pose
 """
 
-from ll_utm_conversion import LLtoUTM, UTMtoLL
+from behavior_interface.ll_utm_conversion import LLtoUTM, UTMtoLL
 
 class GlobalPose():
 
@@ -37,7 +37,7 @@ class GlobalPose():
     def altitude(self):
         return self.altitude_
 
-    @alititude.setter
+    @altitude.setter
     def altitude(self, a):
         self.altitude_ = a
 
