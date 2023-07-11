@@ -3,10 +3,12 @@ Author: Jason Hughes
 Date: July 2023
 About: Behavior organization node
 """
+import copy
 import math
 import rclpy
 
 from rclpy.node import Node
+from rclpy.clock import Clock
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy, QoSDurabilityPolicy
 
 from casa_msgs.msg import CasaAgent, CasaAgentArray
@@ -15,8 +17,9 @@ from sensor_msgs.msg import NavSatFix
 
 from behavior_interface.nav_mode import NavMode
 from behavior_interface.coordinate_frame import CoordinateFrame
-from behavior_interface.localpose import LocalPose
-from behavior_interface.globalpose import GlobalPose
+from behavior_interface.local_pose import LocalPose
+from behavior_interface.global_pose import GlobalPose
+from behavior_interface.utm_pose import UtmPose
 from behavior_interface.ll_utm_conversion import LLtoUTM, UTMtoLL
 
 
@@ -55,25 +58,19 @@ class BehaviorRosInterface(Node):
         if self.nav_mode_ == NavMode.VELOCITY:
             self.desired_ = Twist()
             self.desired_pub_ = self.create_publisher(TwistStamped,
-                                                      topic_namespace+"/internal/behavior_vel",
+                                                      topic_namespace+"/internal/goto_vel",
                                                       qos)
             self.coordinate_frame_ = CoordinateFrame.NONE
         elif self.nav_mode_ == NavMode.WAYPOINT:
+            self.desired_pub_ = self.create_publisher(PoseStamped,
+                                                      topic_namespace+"/internal/goto_pose",
+                                                      qos)
             if self.coordinate_frame_ == CoordinateFrame.LOCAL:
                 self.desired_ = Pose()
-                self.desired_pub_ = self.create_publisher(PoseStamped,
-                                                          topic_namespace+"/internal/behavior_local_pose",
-                                                          qos)
-            elif self.coordiante_frame_ == CoordinateFrame.GLOBAL:
+            elif self.coordinate_frame_ == CoordinateFrame.GLOBAL:
                 self.desired_ = NavSatFix()
-                self.desired_pub_ = self.create_publisher(NavSatFix,
-                                                          topic_namespace+"/internal/behavior_global_pose",
-                                                          qos)
             elif self.coordinate_frame_ == CoordinateFrame.UTM:
                 self.desired_ = UtmPose()
-                self.desired_pub_ = self.create_publisher(NavSatFix,
-                                                          topic_namespace+"/internal/behavior_global_pose",
-                                                          qos)
             else:
                 self.get_logger().info("Incorrect Coordinate Frame set, the options are LOCAL, GLOBAL, and UTM")
         else:
@@ -85,14 +82,33 @@ class BehaviorRosInterface(Node):
         self.system_ = dict()
         self.wp_distance_ = 0.0
         self.zone_ = None
+
+        self.easting_origin_ = 0.0
+        self.northing_origin_ = 0.0
+        self.local_x_0_ = 0.0
+        self.local_y_0_ = 0.0
+        
+        self.utm_pose_ = (0.0,0.0)
+
+        self.global_pose_counter_ = 0
+        self.local_pose_counter_ = 0
+        
         
     def localCallback(self, msg):
-        self.local_pose_.initializeFromPoint(msg.position)
-
+        self.local_pose_.initializeFromPoint(msg.pose.position)
+        if self.local_pose_counter_ == 0:
+            self.local_x_0_ = msg.pose.position.x
+            self.local_y_0_ = msg.pose.position.y
+        self.local_pose_counter_ += 1
+        
         
     def globalCallback(self, msg):
         self.global_pose_.initializeFromNavSatFix(msg)
-
+        self.utm_pose_ = (self.global_pose_.easting, self.global_pose_.northing)
+        if self.global_pose_counter_ == 0:
+            self.easting_0_ = copy.copy(self.utm_pose_[0])
+            self.northing_0_ = copy.copy(self.utm_pose_[1])
+        self.global_pose_counter_ += 1
         
     def systemArrayCallback(self, msg):
         for ag in msg.agents:
@@ -104,40 +120,61 @@ class BehaviorRosInterface(Node):
             wp_pose = (self.desired_.position.x, self.desired_.position.y) 
             return math.dist(my_pose, wp_pose)
         elif self.coordinate_frame_ == CoordinateFrame.UTM:
-            self.zone_, e, n = LLtoUTM(23, self.global_pose_.latitude, self.global_pose_.longitude)
-            my_pose = (e,n)
+            my_pose = self.utm_pose_
             wp_pose = (self.desired_.easting, self.desired_.northing)
             return math.dist(my_pose, wp_pose)
         elif self.coordinate_frame_ == CoordinateFrame.GLOBAL:
-            z, my_e, my_n = LLtoUTM(23, self.global_pose_.latitude, self.global_pose_.longitude)
             z, d_e, d_n = LLtoUTM(23, self.desired_.latitude, self.desired_.longitude)
+            my_pose = self.utm_pose_
+            wp_pose = (d_e, d_n)
             return math.dist(my_pose, wp_pose)
 
-    def publishDesired(self, msg):
-        #msg.header.stamp = self.get_clock().now()
-        msg.header.frame_id = "behavior"
-        self.desired_pub_.publish(msg)
         
+    def publishDesired(self, msg, frame):
+        msg.header.stamp = Clock().now().to_msg()
+        msg.header.frame_id = frame
+        self.desired_pub_.publish(msg)
+
+        
+    def globalToLocal(self, easting, northing):
+        local_x = easting - self.easting_origin_
+        local_y = northing - self.northing_origin_
+
+        return local_x, local_y
+
+    
     def cycleCallback(self):
         self.get_logger().info("publishing...")
+
         if self.nav_mode_ == NavMode.VELOCITY:
             msg = TwistStamped()
             msg.twist = self.desired_
-            self.publishDesired(msg)
+            self.publishDesired(msg, "local_vel")
+
         elif self.nav_mode_ == NavMode.WAYPOINT:
+
             self.wp_distance_ = self.calcDistance()
+
             if self.coordinate_frame_ == CoordinateFrame.LOCAL:
                 msg = PoseStamped()
                 msg.pose = self.desired_
-                self.publishDesired(msg)
+                self.publishDesired(msg, "local")
+
             elif self.coordinate_frame_ == CoordinateFrame.GLOBAL:
-                self.publishDesired(self.desired_)
+                z, e, n = LLtoUTM(23, self.desired_.latitude, self.desired_.longitude)
+                x, y = self.globalToLocal(e, n)
+                msg = PoseStamped()
+                msg.pose.position.x = x
+                msg.pose.position.y = y
+                msg.pose.position.z = self.desired_.altitude
+                self.publishDesired(msg, "local")
+                
             elif self.coordinate_frame_ == CoordinateFrame.UTM:
-                lat, lon = UTMtoLL(23, self.desired_.northing, self.desired_.easting, self.zone_)
-                msg = NavSatFix()
-                msg.latitude = lat
-                msg.longitude = lon
-                msg.altitude = self.desired_.altitude
-                self.publishDesired(msg)
+                x, y = self.globalToLocal(self.desired_.easting, self.desired_.northing)
+                msg = PoseStamped()
+                msg.pose.position.x = x
+                msg.pose.position.y = y
+                msg.pose.position.z = self.desired_.altitude
+                self.publishDesired(msg, "local")
         
         

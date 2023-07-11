@@ -70,7 +70,7 @@ class GlobalPose():
         self.longitude_ = m.longitude
         self.altitude_ = m.altitude
 
-        (z, e, n) = LLtoUTM(23, m.latitude_, m.longitude_)
+        (z, e, n) = LLtoUTM(23, m.latitude, m.longitude)
 
         self.easting_ = e
         self.northing_ = n
