@@ -22,6 +22,13 @@ def generate_launch_description():
                     parameters = [{'sys_id': i}])
 
         ld.add_action(pix_node)
+
+        traj_node = Node(package = 'pixhawk_interface',
+                         name = 'casa_'+str(i)+'_trajectory_planner',
+                         executable = 'trajectory_planner',
+                         parameters = [{'sys_id': i, 'default_alt': 10.0}])
+
+        ld.add_action(traj_node)
         
         sys_node =  Node(package = 'system_interface',
                      name = 'casa_'+str(i)+'_system_interface',
