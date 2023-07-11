@@ -24,10 +24,14 @@ ament_target_dependencies(status rclcpp px4_msgs sensor_msgs geometry_msgs)
 add_executable(task_goto src/task_goto.cpp)
 ament_target_dependencies(task_goto rclcpp px4_msgs geometry_msgs)
 
+add_executable(trajectory_planner src/trajectory_planner.cpp)
+ament_target_dependencies(trajectory_planner rclcpp px4_msgs geometry_msgs)
+
 install(TARGETS
   position
   status
   task_goto
+  trajectory_planner
   DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY
