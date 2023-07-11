@@ -29,11 +29,14 @@ ament_python_install_package(${PROJECT_NAME})
 
 install(PROGRAMS
   src/example.py
+  src/goto_xy.py
+  src/circle.py
   node/behavior_ros_interface_node.py
   DESTINATION lib/${PROJECT_NAME}
   )
 
 install(DIRECTORY
+  launch
   config
   DESTINATION share/${PROJECT_NAME})
 

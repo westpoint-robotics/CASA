@@ -11,6 +11,7 @@ find_package(rclpy)
 find_package(sensor_msgs)
 find_package(geometry_msgs)
 find_package(casa_msgs)
+find_package(std_msgs)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)

@@ -14,6 +14,7 @@ from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy, QoSDur
 from casa_msgs.msg import CasaAgent, CasaAgentArray
 from geometry_msgs.msg import PoseStamped, TwistStamped, Pose, Twist
 from sensor_msgs.msg import NavSatFix
+from std_msgs.msg import Float32
 
 from behavior_interface.nav_mode import NavMode
 from behavior_interface.coordinate_frame import CoordinateFrame
@@ -54,7 +55,12 @@ class BehaviorRosInterface(Node):
         # timer
         self.timer_ = self.create_timer(0.1, self.cycleCallback)
         self.step_autonomy_ = self.create_timer(0.1, self.stepAutonomy)
-                                            
+
+        self.heading_pub_ = self.create_publisher(Float32,
+                                                  topic_namespace+"/internal/goto_heading",
+                                                  qos)
+                                                  
+        
         if self.nav_mode_ == NavMode.VELOCITY:
             self.desired_ = Twist()
             self.desired_pub_ = self.create_publisher(TwistStamped,
@@ -76,11 +82,14 @@ class BehaviorRosInterface(Node):
         else:
             self.get_logger().info("Incorrect Navigation Mode set, the options are VELOCITY and WAYPOINT")
 
+        # variables to look for 
         self.local_pose_ = LocalPose()
         self.global_pose_ = GlobalPose()
-
         self.system_ = dict()
         self.wp_distance_ = 0.0
+
+        self.heading_ = None
+        
         self.zone_ = None
 
         self.easting_origin_ = 0.0
@@ -142,10 +151,13 @@ class BehaviorRosInterface(Node):
 
         return local_x, local_y
 
+    def calculateHeading(self, desired_x, desired_y):
+        heading = math.atan2(desired_y - self.local_pose_.y, desired_x - self.local_pose_.x)
+        return heading
     
     def cycleCallback(self):
         self.get_logger().info("publishing...")
-
+        
         if self.nav_mode_ == NavMode.VELOCITY:
             msg = TwistStamped()
             msg.twist = self.desired_
@@ -158,6 +170,16 @@ class BehaviorRosInterface(Node):
             if self.coordinate_frame_ == CoordinateFrame.LOCAL:
                 msg = PoseStamped()
                 msg.pose = self.desired_
+
+                if self.heading_ != None:
+                    msg_h = Float32()
+                    msg_h.data = self.heading_
+                    self.heading_pub_.publish(msg_h)
+                else:
+                    msg_h = Float32()
+                    msg_h.data = self.calculateHeading(self.desired_.position.x, self.desired_.position.y)
+                    self.heading_pub_.publish(msg_h)
+
                 self.publishDesired(msg, "local")
 
             elif self.coordinate_frame_ == CoordinateFrame.GLOBAL:
@@ -167,6 +189,16 @@ class BehaviorRosInterface(Node):
                 msg.pose.position.x = x
                 msg.pose.position.y = y
                 msg.pose.position.z = self.desired_.altitude
+
+                if self.heading_ != None:
+                    msg_h = Float32()
+                    msg_h.data = self.heading_
+                    self.heading_pub_.publish(msg)
+                else:
+                    msg_h = Float32()
+                    msg_h.data = self.calculateHeading(x,y)
+                    self.heading_pub_.publish(msg) 
+
                 self.publishDesired(msg, "local")
                 
             elif self.coordinate_frame_ == CoordinateFrame.UTM:
@@ -175,6 +207,16 @@ class BehaviorRosInterface(Node):
                 msg.pose.position.x = x
                 msg.pose.position.y = y
                 msg.pose.position.z = self.desired_.altitude
+
+                if self.heading_ != None:
+                    msg_h = Float32()
+                    msg_h.data = self.heading_
+                    self.heading_pub_.publish(msg_h)
+                else:
+                    msg_h = Float32()
+                    msg_h.data = self.calculateHeading(x,y)
+                    self.heading_pub_.publish(msg_h)
+                    
                 self.publishDesired(msg, "local")
         
         

@@ -9,6 +9,7 @@
 
 #include "geometry_msgs/msg/twist_stamped.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
+#include "std_msgs/msg/float32.hpp"
 
 #include "px4_msgs/msg/offboard_control_mode.hpp"
 #include "px4_msgs/msg/vehicle_command.hpp"
@@ -28,7 +29,8 @@ private:
 
   void poseCallback(const geometry_msgs::msg::PoseStamped& msg);
   void velCallback(const geometry_msgs::msg::TwistStamped& msg);
-
+  void headingCallback(const std_msgs::msg::Float32 & msg);
+  
   void toPixhawk();
 
   void publishControlMode();
@@ -37,7 +39,8 @@ private:
   
   rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr pose_sub_;
   rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr vel_sub_;
-
+  rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr heading_sub_;
+  
   rclcpp::TimerBase::SharedPtr timer_;
 
   rclcpp::Publisher<px4_msgs::msg::OffboardControlMode>::SharedPtr control_mode_pub_;
@@ -45,6 +48,8 @@ private:
   rclcpp::Publisher<px4_msgs::msg::TrajectorySetpoint>::SharedPtr trajectory_pub_;
 
   int my_id_;
+  float default_alt_;
+  float heading_;
   float pose_x_, pose_y_, pose_z_;
   float vel_x_, vel_y_, vel_z_;
 
@@ -59,9 +64,9 @@ TrajectoryPlanner::TrajectoryPlanner() : Node("trajectory_planner")
   qos.transient_local();
 
   this -> declare_parameter("sys_id", 1);
-
+  this -> declare_parameter("default_alt", 10.0);
   my_id_ = this -> get_parameter("sys_id").get_parameter_value().get<int>();
-
+  default_alt_ = this -> get_parameter("default_alt").get_parameter_value().get<float>();
   
   std::string pub_namespace = "/px4_" + std::to_string(my_id_);
   std::string sub_namespace = "/casa" + std::to_string(my_id_);
@@ -81,6 +86,12 @@ TrajectoryPlanner::TrajectoryPlanner() : Node("trajectory_planner")
 										     this,
 										     std::placeholders::_1));
 
+  heading_sub_ = this -> create_subscription<std_msgs::msg::Float32>(sub_namespace+"/internal/goto_heading",
+								     qos,
+								     std::bind(&TrajectoryPlanner::headingCallback,
+									       this,
+									       std::placeholders::_1));
+  
   timer_ = this -> create_wall_timer(10ms, std::bind(&TrajectoryPlanner::toPixhawk, this));
 
   for(int i=0; i<5; i++)
@@ -93,7 +104,12 @@ TrajectoryPlanner::TrajectoryPlanner() : Node("trajectory_planner")
 
   pose_x_ = 0.0;
   pose_y_ = 0.0;
-  pose_z_ = 0.0;
+  pose_z_ = -1.0 * default_alt_;
+}
+
+void TrajectoryPlanner::headingCallback(const std_msgs::msg::Float32& msg)
+{
+  heading_ = msg.data;
 }
 
 void TrajectoryPlanner::poseCallback(const geometry_msgs::msg::PoseStamped& msg)
@@ -141,7 +157,7 @@ void TrajectoryPlanner::publishTrajectory()
       msg.velocity = {vel_x_, vel_y_, vel_z_};
       msg.position = {};
     }
-  msg.yaw = 0.0;
+  msg.yaw = heading_;
   msg.timestamp = this -> get_clock() -> now().nanoseconds()/1000;
 
   trajectory_pub_ -> publish(msg);

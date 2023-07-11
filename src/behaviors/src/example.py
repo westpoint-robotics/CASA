@@ -11,6 +11,8 @@ from behavior_interface.coordinate_frame import CoordinateFrame
 class BehaviorExample(BehaviorRosInterface):
 
     def __init__(self):
+        # define the navigation mode (velocity or waypoint)
+        # if using waypoint navigation define the coordinframe (local, global or utm)
         super().__init__(NavMode.WAYPOINT, coordinate_frame = CoordinateFrame.LOCAL)
 
         self.desired_.position.x = 0.0
