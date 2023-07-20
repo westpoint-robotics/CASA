@@ -24,7 +24,7 @@ def generate_launch_description():
                      executable = 'system',
                      parameters = [{'sys_id': sys_id}])
 
-    casa_bot_node = Node(package = 'turtlebot3',
+    casa_bot_node = Node(package = 'turtlebot3_interface',
                          name = "turtlebot_"+str(sys_id)+"_node",
                          executable = "turtlebot_interface",
                          parameters = [{'sys_id': sys_id}])
