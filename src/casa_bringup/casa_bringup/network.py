@@ -20,7 +20,7 @@ def scan(saved_names: tuple, interface_id: str) -> list:
         if name in saved_names and ip != my_ip:
             ids.append(int(ip.split('.')[-1]))
 
-    return ips
+    return ids
 
 
 def myIP(inerface_id: str):

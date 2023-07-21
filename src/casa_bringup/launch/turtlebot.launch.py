@@ -17,7 +17,7 @@ from launch_ros.actions import PushRosNamespace
 def generate_launch_description():
 
     names = ("ubuntu.net")
-    network_interface = "wlo1"
+    network_interface = "wlan0"
     
     for arg in sys.argv:
         if arg.startswith("name:="):
