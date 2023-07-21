@@ -16,7 +16,10 @@ Bridge::Bridge() : Node("bridging")
   rclcpp::sleep_for(std::chrono::seconds(5));
   
   this -> declare_parameter("sys_id", 1);
+  this -> declare_parameter("system_ids", system_ids_);
   my_id_ = this -> get_parameter("sys_id").get_parameter_value().get<int>();
+  system_ids_ = this -> get_parameter("system_ids").get_parameter_value().get<std::vector<long int>>();
+  
   std::string nspc = "casa"+std::to_string(my_id_);
 
   rclcpp::QoS qos(10);
@@ -25,11 +28,6 @@ Bridge::Bridge() : Node("bridging")
   qos.transient_local();
 
   group_ = this -> create_callback_group(rclcpp::CallbackGroupType::Reentrant);
-  //options_.callback_group -> group_;
-  
-  sys_id_sub_ = this -> create_subscription<std_msgs::msg::UInt16MultiArray>(nspc + "/internal/system_ids",
-									     qos,
-									     std::bind(&Bridge::sysIdCallback, this, std::placeholders::_1));
 
   timer_ = this -> create_wall_timer(1000ms, std::bind(&Bridge::timerCallback, this), group_);  
 }
@@ -41,25 +39,6 @@ void Bridge::timerCallback()
   topic_map_ = get_topic_names_and_types();
   extractTopicsAndBridge();
 }
-
-
-void Bridge::sysIdCallback(const std_msgs::msg::UInt16MultiArray& msg)
-{
-  std::vector<uint16_t> ids_in = msg.data;
-
-  int num_ids = ids_in.size();
-  
-  for(int i = 0; i < num_ids; i++)
-    {
-      if (!(std::count(system_ids_.begin(), system_ids_.end(), ids_in[i])))
-	{
-	  // if its not an already tracked id, add it to the vector
-	  system_ids_.push_back(ids_in[i]);
-	}
-    }
-	    
-}
-
 
 void Bridge::extractTopicsAndBridge()
 {
