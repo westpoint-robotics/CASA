@@ -74,8 +74,8 @@ private:
   
   std::map<int,int> iter_tracker_; 
   std::vector<AgentTracker> system_tracker_;
-  std::vector<int> system_ids_;
-  
+  std::vector<long int> system_ids_;
+
   int my_id_;
   int my_task_;
   float dropout_;
