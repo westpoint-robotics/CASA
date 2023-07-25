@@ -1,7 +1,7 @@
 import os
 import sys
 
-from casa_bringup.network import scan  
+from casa_bringup.network import scan, myIP  
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
