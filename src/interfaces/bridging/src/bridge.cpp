@@ -55,27 +55,38 @@ void Bridge::extractTopicsAndBridge()
       for (std::string istr: split_str)
       	{
 	  // add a domain bridge if the topic is external and hasn't been bridged yet
-      	  if ((istr == "external") && !(bridged_topics_.count(full_topic)))
+      	  if ( (istr == "external") && !(bridged_topics_.count(full_topic)) )
 	    {
-	      addBridge(full_topic, type);
-	      bridged_topics_.insert(full_topic);
+	      if (!(std::count(bridged_topics_.begin(), bridged_topics_.end(), full_topic)))
+		{
+		  addBridge(full_topic, type, split_str);
+		  bridged_topics_.insert(full_topic);
+		}
 	    }
       	}
     }
 }
 
 
-void Bridge::addBridge(std::string topic, std::string type)
+void Bridge::addBridge(std::string topic, std::string type, std::vector<std::string> split_str)
 {
-  RCLCPP_INFO_STREAM(get_logger(), "bridging: "<<topic);
+
   domain_bridge::TopicBridgeOptions tbo;
   tbo.callback_group() = group_;
   
   for (int to_id : system_ids_)
     {
       // bride_topic(topic, msg_type, from, to)
-      domain_bridge_.bridge_topic(topic, type, my_id_, to_id, tbo);
-      RCLCPP_INFO_STREAM(get_logger(), "bridging from " << my_id_ << " to " << to_id << " on topic: " << topic);
+      if (split_str[0] == "casa"+std::to_string(my_id_))
+	{
+	  //domain_bridge::DomainBridgeOptions dbo;
+	  //std::string node_name = "casa_"+std::to_string(to_id)+"_domain_bridge;
+	  //dbo.name() = node_name;
+	  domain_bridge_.bridge_topic(topic, type, my_id_, to_id, tbo);
+	  RCLCPP_INFO_STREAM(get_logger(), "bridging from " << my_id_ << " to " << to_id << " on topic: " << topic);	  
+	  domain_bridge_.add_to_executor(executor_);
+	  executor_.spin();
+	}
     }
   
 }

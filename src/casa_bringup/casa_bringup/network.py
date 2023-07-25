@@ -14,6 +14,7 @@ def scan(saved_names: tuple, interface_id: str) -> list:
     
     for d in os.popen('nmap -sn 192.168.1.0/24', 'r', 1):
         print(d)
+<<<<<<< HEAD
         msg_ind = d.find("192")
         msg = d[msg_ind:]
         if ")" in msg:
@@ -27,6 +28,12 @@ def scan(saved_names: tuple, interface_id: str) -> list:
         else:
             name = saved_names[0]
             
+=======
+        msg = d.split('(')
+        ip = msg[1][:-2]
+        name = msg[0].split(" ")[-2]
+        
+>>>>>>> 91aa8540e7073830bdcb4ed2354d4dad794e6b99
         if name in saved_names and ip != my_ip:
             ag_id = int(ip.split('.')[-1])
             if ag_id > 232:

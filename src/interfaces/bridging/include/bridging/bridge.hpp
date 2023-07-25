@@ -42,6 +42,6 @@ private:
   void timerCallback();
   void sysIdCallback(const std_msgs::msg::UInt16MultiArray& msg);
   void extractTopicsAndBridge();
-  void addBridge(std::string topic, std::string type);
+  void addBridge(std::string topic, std::string type, std::vector<std::string> split_str);
 };
 #endif
