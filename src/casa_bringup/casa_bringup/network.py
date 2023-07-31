@@ -27,6 +27,7 @@ def scan(saved_names: tuple, interface_id: str) -> list:
             name = msg[0].split(" ")[-2]
         else:
             name = saved_names[0]
+
         
         if name in saved_names and ip != my_ip:
             ag_id = int(ip.split('.')[-1])
