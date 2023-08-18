@@ -27,7 +27,7 @@ public:
 private:
 
   int my_id_;
-  std::vector<uint16_t> system_ids_;
+  std::vector<long int> system_ids_;
   std::set<std::string> bridged_topics_;
 
   rclcpp::CallbackGroup::SharedPtr group_;

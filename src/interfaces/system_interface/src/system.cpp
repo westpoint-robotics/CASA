@@ -18,11 +18,13 @@ SystemInterface::SystemInterface() : Node("system_interface")
   
   this -> declare_parameter("sys_id", 1);
   this -> declare_parameter("dropout", 30.0);
-  this -> declare_parameter("use_sim", true);
+  this -> declare_parameter("use_sim", false);
+  this -> declare_parameter("system_ids", system_ids_);
   my_id_ = this -> get_parameter("sys_id").get_parameter_value().get<int>();
   dropout_ = this -> get_parameter("dropout").get_parameter_value().get<float>();
   use_sim_ = this -> get_parameter("use_sim").get_parameter_value().get<bool>();
-
+  system_ids_ = this -> get_parameter("system_ids").get_parameter_value().get<std::vector<long int>>();
+  
   if (use_sim_ == true)
   {
     this -> declare_parameter("num_agents", 2);
@@ -46,14 +48,14 @@ SystemInterface::SystemInterface() : Node("system_interface")
 								qos,
 								std::bind(&SystemInterface::myTaskCallback, this, std::placeholders::_1));
   //need the number of agents in the swarm 
-  for (int i = 1; i <= num_agents_; i++)
+  for (int i = 0; i <= num_agents_; i++)
     {
+      long int ag = system_ids_[i];
+      std::string casa_topic = "casa"+std::to_string(ag)+"/external/exchange";
 	
-      std::string casa_topic = "casa"+std::to_string(i)+"/external/exchange";
-	
-      if (i != my_id_)
+      if (ag != my_id_)
 	{
-	  RCLCPP_INFO_STREAM(this->get_logger(), "agent: " << my_id_ << " subscribing to the external topic of agent: "<< i);
+	  RCLCPP_INFO_STREAM(this->get_logger(), "agent: " << my_id_ << " subscribing to the external topic of agent: "<< ag);
 	  auto casa_sub = this -> create_subscription<casa_msgs::msg::CasaInterface>(casa_topic,
 	  									     qos,
 	  									     std::bind(&SystemInterface::externalCasaCallback ,this, std::placeholders::_1));
