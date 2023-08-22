@@ -1,7 +1,0 @@
-example:
-  filename: example
-  class: BehaviorExample
-  params:
-    alpha: 1.0
-    beta: 2.0
-    
