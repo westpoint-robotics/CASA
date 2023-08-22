@@ -44,4 +44,4 @@ Unique-Behavior-Name:
     param2: b
     ...
 ```
-In your yaml in put the first line should be a unique name for your behvior, `filename` is the name the python file you created in `src/`, class is the name of class you created in your behavior (i.e. `ExampleBehavior`) and finally you can list parameters you want to pass into your behavior. They become ROS 2 parameters so get them the same way you would get any ROS 2 param. 
+In your yaml in put the first line should be a unique name for your behvior, `filename` is the name the python file you created in `src/`, `class` is the name of class you created in your behavior (i.e. `ExampleBehavior`) and finally you can list parameters under `params` that you want to pass into your behavior. They become ROS 2 parameters so get them the same way you would get any ROS 2 param. 
