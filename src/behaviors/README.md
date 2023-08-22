@@ -34,7 +34,7 @@ class ExampleBehavior(BehaviorRosInterface):
 ```
 Change the inputs to the class inheritance to your desired nav mode and cooridinate frame.
 
-Next you'll need to add your behavior to `config/behaviors.yaml` following this format
+Next you'll need to add your behavior to `behaviors/config/behaviors.yaml` following this format
 ```yaml
 Unique-Behavior-Name:
   filename: <your-behavior-filename>.py
@@ -44,3 +44,4 @@ Unique-Behavior-Name:
     param2: b
     ...
 ```
+In your yaml in put the first line should be a unique name for your behvior, `filename` is the name the python file you created in `src/`, class is the name of class you created in your behavior (i.e. `ExampleBehavior`) and finally you can list parameters you want to pass into your behavior. They become ROS 2 parameters so get them the same way you would get any ROS 2 param. 
