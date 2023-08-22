@@ -18,7 +18,7 @@ To run a behavior, launch CASA for your agent or simulation first. Once CASA is 
 ### Adding a New Behavior ###
 To write a new behavior, create a new python file in `behaviors/src` then you'll need to start with with this shell:
 
-```python:
+```python
 import rclpy
 from behavior_interface.behavior_ros_interface import BehaviorRosInterface
 from behavior_interface.nav_mode import NavMode
@@ -35,7 +35,7 @@ class ExampleBehavior(BehaviorRosInterface):
 Change the inputs to the class inheritance to your desired nav mode and cooridinate frame.
 
 Next you'll need to add your behavior to `config/behaviors.yaml` following this format
-```yaml:
+```yaml
 Unique-Behavior-Name:
   filename: <your-behavior-filename>.py
   class: <behaviors-classname>.py
