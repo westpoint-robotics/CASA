@@ -73,28 +73,28 @@ private:
 
   rclcpp::TimerBase::SharedPtr timer_;
 
-  void odomCallback(const nav_msgs::msg::Odometry& msg);
-  void velCallback(const geometry_msgs::msg::TwistStamped& msg);
+  void odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg);
+  void velCallback(const geometry_msgs::msg::TwistStamped::SharedPtr msg);
 
 };
 
-void TurtlebotInterface::odomCallback(const nav_msgs::msg::Odometry& msg)
+void TurtlebotInterface::odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
 {
   RCLCPP_INFO_STREAM_ONCE(this->get_logger(), "Connected to turtlebot3");
   geometry_msgs::msg::PoseStamped outgoing_msg;
 
-  outgoing_msg.pose = msg.pose.pose;
+  outgoing_msg.pose = msg->pose.pose;
   outgoing_msg.header.stamp = this -> get_clock() -> now();
   outgoing_msg.header.frame_id = "local";
 
   local_pub_ -> publish(outgoing_msg);
 }
 
-void TurtlebotInterface::velCallback(const geometry_msgs::msg::TwistStamped& msg)
+void TurtlebotInterface::velCallback(const geometry_msgs::msg::TwistStamped::SharedPtr msg)
 {
   geometry_msgs::msg::Twist outgoing_msg;
 
-  outgoing_msg = msg.twist;
+  outgoing_msg = msg->twist;
 
   vel_pub_ -> publish(outgoing_msg);
 }

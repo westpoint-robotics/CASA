@@ -74,23 +74,23 @@ public:
   
 private:
 
-  void gps_callback(const px4_msgs::msg::SensorGps& msg)
+  void gps_callback(const px4_msgs::msg::SensorGps::SharedPtr msg)
   {
     /* callback function for gps subscriber
      * gets lat,lon and alt of drone and puts them in a class variable
      */ 
-    alt_in_ = int_to_float_conversion(msg.alt, 0);
-    lat_in_ = int_to_float_conversion(msg.lat, 1);
-    lon_in_ = int_to_float_conversion(msg.lon, 2);
+    alt_in_ = int_to_float_conversion(msg->alt, 0);
+    lat_in_ = int_to_float_conversion(msg->lat, 1);
+    lon_in_ = int_to_float_conversion(msg->lon, 2);
     RCLCPP_DEBUG_STREAM(this->get_logger(),"Alt: "<< alt_in_);
   }
 
-  void status_callback(const px4_msgs::msg::VehicleStatus& msg)
+  void status_callback(const px4_msgs::msg::VehicleStatus::SharedPtr msg)
   {
     /* callback function for vehicle status
      * gets the current state or mode of the pixhawk
      */
-    nav_state_in_ = msg.nav_state;
+    nav_state_in_ = msg->nav_state;
   }
   
   float int_to_float_conversion(int input, int flag)

@@ -24,7 +24,7 @@ SystemInterface::SystemInterface() : Node("system_interface")
   dropout_ = this -> get_parameter("dropout").get_parameter_value().get<float>();
   use_sim_ = this -> get_parameter("use_sim").get_parameter_value().get<bool>();
   system_ids_ = this -> get_parameter("system_ids").get_parameter_value().get<std::vector<long int>>();
-  
+
   if (use_sim_ == true)
   {
     this -> declare_parameter("num_agents", 2);
@@ -32,7 +32,7 @@ SystemInterface::SystemInterface() : Node("system_interface")
   }
   
   namespace_ = "casa" + std::to_string(my_id_);
-    
+
   local_pose_sub_ = this -> create_subscription<geometry_msgs::msg::PoseStamped>(namespace_+"/internal/local_position", //update this topic name
 										 qos,
 										 std::bind(&SystemInterface::localCallback, this, std::placeholders::_1));
@@ -47,26 +47,45 @@ SystemInterface::SystemInterface() : Node("system_interface")
   task_sub_ = this -> create_subscription<std_msgs::msg::Int32>(namespace_+"/internal/task_number",
 								qos,
 								std::bind(&SystemInterface::myTaskCallback, this, std::placeholders::_1));
+  std::cout<<my_id_<<std::endl;
+
   //need the number of agents in the swarm 
-  for (int i = 0; i <= num_agents_; i++)
-    {
-      long int ag = system_ids_[i];
-      std::string casa_topic = "casa"+std::to_string(ag)+"/external/exchange";
+   for (int i = 1; i <= num_agents_; i++)    {
 	
-      if (ag != my_id_)
+      std::string casa_topic = "casa"+std::to_string(i)+"/external/exchange";
+	
+      if (i != my_id_)
 	{
-	  RCLCPP_INFO_STREAM(this->get_logger(), "agent: " << my_id_ << " subscribing to the external topic of agent: "<< ag);
+	  RCLCPP_INFO_STREAM(this->get_logger(), "agent: " << my_id_ << " subscribing to the external topic of agent: "<< i);
 	  auto casa_sub = this -> create_subscription<casa_msgs::msg::CasaInterface>(casa_topic,
 	  									     qos,
 	  									     std::bind(&SystemInterface::externalCasaCallback ,this, std::placeholders::_1));
 	  casa_references_.push_back(casa_sub);
 	}
     }
-
+  
+  //Below is from master version which casued the pid exit (dec 13 2023)  
+  //for (int i = 0; i <= num_agents_; i++)
+   // {
+      //long int ag = system_ids_[i];
+     // std::string casa_topic = "casa"+std::to_string(ag)+"/external/exchange";
+	
+      //if (ag != my_id_)
+	//{
+	 // RCLCPP_INFO_STREAM(this->get_logger(), "agent: " << my_id_ << " subscribing to the external topic of agent: "<< ag);
+	  //auto casa_sub = this -> create_subscription<casa_msgs::msg::CasaInterface>(casa_topic,
+	  			//						     qos,
+	  	//								     std::bind(&SystemInterface::externalCasaCallback ,this, std::placeholders::_1));
+	  //casa_references_.push_back(casa_sub);
+	//}
+    //}
+    
+	std::cout<<my_id_<<std::endl;
   system_pose_pub_ = this -> create_publisher<casa_msgs::msg::CasaAgentArray>(namespace_+"/internal/system_array", qos);
   external_pub_ = this -> create_publisher<casa_msgs::msg::CasaInterface>(namespace_+"/external/exchange", qos);
   system_task_pub_ = this -> create_publisher<casa_msgs::msg::CasaTaskArray>(namespace_+"/internal/system_tasks", qos);
   timer_ = this -> create_wall_timer(100ms, std::bind(&SystemInterface::timerCallback, this));
+ printf("1\n");
 }
 
 
@@ -101,9 +120,9 @@ void SystemInterface::checkTime()
   //  }
 }
 
-void SystemInterface::myTaskCallback(const std_msgs::msg::Int32& msg)
+void SystemInterface::myTaskCallback(const std_msgs::msg::Int32::SharedPtr msg)
 {
-  my_task_ = msg.data;
+  my_task_ = msg->data;
 }
 
 
@@ -187,35 +206,35 @@ void SystemInterface::taskPublisher()
 }
 
 
-void SystemInterface::localCallback(const geometry_msgs::msg::PoseStamped& msg)
+void SystemInterface::localCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg)
 {
-  local_x_ = msg.pose.position.x;
-  local_y_ = msg.pose.position.y;
+  local_x_ = msg->pose.position.x;
+  local_y_ = msg->pose.position.y;
 }
 
-void SystemInterface::headingCallback(const std_msgs::msg::Float32& msg)
+void SystemInterface::headingCallback(const std_msgs::msg::Float32::SharedPtr msg)
 {
-  internal_heading_ = msg.data;
+  internal_heading_ = msg->data;
 }
 
-void SystemInterface::internalGpsCallback(const sensor_msgs::msg::NavSatFix& msg)
+void SystemInterface::internalGpsCallback(const sensor_msgs::msg::NavSatFix::SharedPtr msg)
 {
-  internal_lat_ = msg.latitude;
-  internal_lon_ = msg.longitude;
-  internal_alt_ = msg.altitude;
+  internal_lat_ = msg->latitude;
+  internal_lon_ = msg->longitude;
+  internal_alt_ = msg->altitude;
 }
 
 
-void SystemInterface::externalCasaCallback(const casa_msgs::msg::CasaInterface& msg)
+void SystemInterface::externalCasaCallback(const casa_msgs::msg::CasaInterface::SharedPtr msg)
 {
-  sys_id_in_ = msg.sys_id;
+  sys_id_in_ = msg->sys_id;
   RCLCPP_DEBUG_STREAM(this->get_logger(), "Agent: " << my_id_ << " talking to agent: " << sys_id_in_);
-  lat_in_ = msg.latitude;
-  lon_in_ = msg.longitude;
-  alt_in_ = msg.altitude;
-  heading_in_ = msg.heading;
-  task_in_ = msg.assigned_task;
-  level_in_ = msg.connectivity_level;
+  lat_in_ = msg->latitude;
+  lon_in_ = msg->longitude;
+  alt_in_ = msg->altitude;
+  heading_in_ = msg->heading;
+  task_in_ = msg->assigned_task;
+  level_in_ = msg->connectivity_level;
 
   if (std::count(system_ids_.begin(), system_ids_.end(), sys_id_in_))
     {

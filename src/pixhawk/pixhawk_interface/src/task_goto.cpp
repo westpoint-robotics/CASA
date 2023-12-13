@@ -38,12 +38,12 @@ private:
   float task_x_in_, task_y_in_, alt_;
   float current_pose_x_, current_pose_y_, current_pose_z_;
   
-  px4_msgs::msg::VehicleStatus status_;
+  px4_msgs::msg::VehicleStatus::SharedPtr status_;
   
   void cycleCallback();
-  void taskCallback(const geometry_msgs::msg::PoseStamped& msg);
-  void statusCallback(const px4_msgs::msg::VehicleStatus& msg);
-  void poseCallback(const geometry_msgs::msg::PoseStamped& msg);
+  void taskCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg);
+  void statusCallback(const px4_msgs::msg::VehicleStatus::SharedPtr msg);
+  void poseCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg);
   
   void publishControlMode();
   void publishTrajectory();
@@ -100,7 +100,7 @@ void GoToTask::cycleCallback()
 {
   publishControlMode();
 
-  if (status_.nav_state == px4_msgs::msg::VehicleStatus::NAVIGATION_STATE_OFFBOARD)
+  if (status_->nav_state == px4_msgs::msg::VehicleStatus::NAVIGATION_STATE_OFFBOARD)
     {
       //publish point from task
       publishTrajectory();
@@ -110,24 +110,24 @@ void GoToTask::cycleCallback()
 }
 
 
-void GoToTask::taskCallback(const geometry_msgs::msg::PoseStamped& msg)
+void GoToTask::taskCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg)
 {
-  task_x_in_ = msg.pose.position.x;
-  task_y_in_ = msg.pose.position.y;
+  task_x_in_ = msg->pose.position.x;
+  task_y_in_ = msg->pose.position.y;
   RCLCPP_INFO_ONCE(this->get_logger(), "Pixhawk recieved command from task");
 }
 
 
-void GoToTask::statusCallback(const px4_msgs::msg::VehicleStatus& msg)
+void GoToTask::statusCallback(const px4_msgs::msg::VehicleStatus::SharedPtr msg)
 {
   status_ = msg;
 }
 
-void GoToTask::poseCallback(const geometry_msgs::msg::PoseStamped& msg)
+void GoToTask::poseCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg)
 {
-  current_pose_x_ = msg.pose.position.x;
-  current_pose_y_ = msg.pose.position.y;
-  current_pose_z_ = msg.pose.position.z;
+  current_pose_x_ = msg->pose.position.x;
+  current_pose_y_ = msg->pose.position.y;
+  current_pose_z_ = msg->pose.position.z;
 }
 
 

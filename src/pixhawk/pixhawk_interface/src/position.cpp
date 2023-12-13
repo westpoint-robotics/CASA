@@ -88,9 +88,9 @@ private:
   
   rclcpp::TimerBase::SharedPtr timer_;
 
-  void localCallback(const px4_msgs::msg::VehicleLocalPosition& msg);
-  void gpsCallback(const px4_msgs::msg::VehicleGlobalPosition& msg);
-  void attitudeCallback(const px4_msgs::msg::VehicleAttitude& msg);
+  void localCallback(const px4_msgs::msg::VehicleLocalPosition::SharedPtr msg);
+  void gpsCallback(const px4_msgs::msg::VehicleGlobalPosition::SharedPtr msg);
+  void attitudeCallback(const px4_msgs::msg::VehicleAttitude::SharedPtr msg);
   
   void localPosePublisher(float x, float y, float z, float qx, float qy, float qz, float qw);
   void globalPosePublisher(float lat, float lon, float alt, int sys_id);
@@ -109,28 +109,28 @@ void PixhawkInterface::timerCallback()
   headingPublisher(heading_in_);
 }
 
-void PixhawkInterface::attitudeCallback(const px4_msgs::msg::VehicleAttitude& msg)
+void PixhawkInterface::attitudeCallback(const px4_msgs::msg::VehicleAttitude::SharedPtr msg)
 {
-  quat_x_in_ = msg.q[0];
-  quat_y_in_ = msg.q[1];
-  quat_z_in_ = msg.q[2];
-  quat_w_in_ = msg.q[3];
+  quat_x_in_ = msg->q[0];
+  quat_y_in_ = msg->q[1];
+  quat_z_in_ = msg->q[2];
+  quat_w_in_ = msg->q[3];
 }
 
-void PixhawkInterface::localCallback(const px4_msgs::msg::VehicleLocalPosition& msg)
+void PixhawkInterface::localCallback(const px4_msgs::msg::VehicleLocalPosition::SharedPtr msg)
 {
-  local_x_in_ = msg.x;
-  local_y_in_ = msg.y;
-  local_z_in_ = msg.z;
-  heading_in_ = msg.heading;
+  local_x_in_ = msg->x;
+  local_y_in_ = msg->y;
+  local_z_in_ = msg->z;
+  heading_in_ = msg->heading;
   RCLCPP_INFO_STREAM_ONCE(this->get_logger(), "ID " << sys_id_ << " connected to pixhawk");
 }
 
-void PixhawkInterface::gpsCallback(const px4_msgs::msg::VehicleGlobalPosition& msg)
+void PixhawkInterface::gpsCallback(const px4_msgs::msg::VehicleGlobalPosition::SharedPtr msg)
 {
-  lat_in_ = msg.lat;
-  lon_in_ = msg.lon;
-  alt_in_ = msg.alt;
+  lat_in_ = msg->lat;
+  lon_in_ = msg->lon;
+  alt_in_ = msg->alt;
   //RCLCPP_INFO_STREAM(this->get_logger(), "recieved gps message at: "<< lat_in_ << ", " << lon_in_);
 }
 

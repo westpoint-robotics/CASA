@@ -34,7 +34,15 @@ install(PROGRAMS
   node/behavior_ros_interface_node.py
   DESTINATION lib/${PROJECT_NAME}
   )
-
+  
+install(PROGRAMS
+  src/example.py
+  src/goto_xy.py
+  src/circle.py
+  node/behavior_ros_interface_node.py
+  DESTINATION lib/python3.8/site-packages
+  )
+  
 install(DIRECTORY
   launch
   config

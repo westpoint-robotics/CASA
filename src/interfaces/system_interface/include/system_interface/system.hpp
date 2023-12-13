@@ -57,12 +57,12 @@ private:
   
   rclcpp::TimerBase::SharedPtr timer_;
   
-  void externalCasaCallback(const casa_msgs::msg::CasaInterface& msg);
-  void localCallback(const geometry_msgs::msg::PoseStamped& msg);
-  void internalGpsCallback(const sensor_msgs::msg::NavSatFix& msg);
-  void externalSysidCallback(const std_msgs::msg::UInt16MultiArray& msg);
-  void headingCallback(const std_msgs::msg::Float32& msg);
-  void myTaskCallback(const std_msgs::msg::Int32& msg);
+  void externalCasaCallback(const casa_msgs::msg::CasaInterface::SharedPtr msg);
+  void localCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg);
+  void internalGpsCallback(const sensor_msgs::msg::NavSatFix::SharedPtr msg);
+  void externalSysidCallback(const std_msgs::msg::UInt16MultiArray::SharedPtr msg);
+  void headingCallback(const std_msgs::msg::Float32::SharedPtr msg);
+  void myTaskCallback(const std_msgs::msg::Int32::SharedPtr msg);
   
   void timerCallback();
 

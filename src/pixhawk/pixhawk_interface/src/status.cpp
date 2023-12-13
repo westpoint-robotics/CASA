@@ -62,23 +62,23 @@ private:
   rclcpp::Subscription<px4_msgs::msg::VehicleStatus>::SharedPtr status_sub_;
   rclcpp::Subscription<px4_msgs::msg::FailsafeFlags>::SharedPtr failsafe_sub_;
 
-  void status_callback(const px4_msgs::msg::VehicleStatus& msg);
-  void failsafe_callback(const px4_msgs::msg::FailsafeFlags& msg);
+  void status_callback(const px4_msgs::msg::VehicleStatus::SharedPtr msg);
+  void failsafe_callback(const px4_msgs::msg::FailsafeFlags::SharedPtr msg);
 
 };
 
-void StatusInterface::status_callback(const px4_msgs::msg::VehicleStatus& msg)
+void StatusInterface::status_callback(const px4_msgs::msg::VehicleStatus::SharedPtr msg)
 {
-  arming_state_ = msg.arming_state;
-  latest_disarming_reason_ = msg.latest_disarming_reason;
-  nav_state_ = msg.nav_state;
-  system_id_ = msg.system_id;
+  arming_state_ = msg->arming_state;
+  latest_disarming_reason_ = msg->latest_disarming_reason;
+  nav_state_ = msg->nav_state;
+  system_id_ = msg->system_id;
 }
 
-void StatusInterface::failsafe_callback(const px4_msgs::msg::FailsafeFlags& msg)
+void StatusInterface::failsafe_callback(const px4_msgs::msg::FailsafeFlags::SharedPtr msg)
 {
-  battery_low_ = msg.battery_low_remaining_time;
-  battery_unhealthy_ = msg.battery_unhealthy;
+  battery_low_ = msg->battery_low_remaining_time;
+  battery_unhealthy_ = msg->battery_unhealthy;
 }
 
 int main(int argc, char * argv[])

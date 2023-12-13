@@ -11,10 +11,10 @@ def generate_launch_description():
 
     ld = LaunchDescription()
 
-    micro_ros_node = Node(package = "micro_ros_agent",                                                  
-                          name = "micro_ros",                                                           
-                          executable = "micro_ros_agent",                                               
-                          arguments = ['udp4', '--port', '8888']) 
+    #micro_ros_node = Node(package = "micro_ros_agent",                                                  
+     #                     name = "micro_ros",                                                           
+      #                    executable = "micro_ros_agent",                                               
+       #                   arguments = ['udp4', '--port', '8888']) 
     
     for arg in sys.argv:
         if arg.startswith("num_agents:="):

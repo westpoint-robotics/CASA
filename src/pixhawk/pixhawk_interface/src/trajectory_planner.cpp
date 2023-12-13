@@ -27,9 +27,9 @@ public:
 
 private:
 
-  void poseCallback(const geometry_msgs::msg::PoseStamped& msg);
-  void velCallback(const geometry_msgs::msg::TwistStamped& msg);
-  void headingCallback(const std_msgs::msg::Float32 & msg);
+  void poseCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg);
+  void velCallback(const geometry_msgs::msg::TwistStamped::SharedPtr msg);
+  void headingCallback(const std_msgs::msg::Float32::SharedPtr msg);
   
   void toPixhawk();
 
@@ -107,26 +107,26 @@ TrajectoryPlanner::TrajectoryPlanner() : Node("trajectory_planner")
   pose_z_ = -1.0 * default_alt_;
 }
 
-void TrajectoryPlanner::headingCallback(const std_msgs::msg::Float32& msg)
+void TrajectoryPlanner::headingCallback(const std_msgs::msg::Float32::SharedPtr msg)
 {
-  heading_ = msg.data;
+  heading_ = msg->data;
 }
 
-void TrajectoryPlanner::poseCallback(const geometry_msgs::msg::PoseStamped& msg)
+void TrajectoryPlanner::poseCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg)
 {
-  pose_x_ = msg.pose.position.x;
-  pose_y_ = msg.pose.position.y;
-  pose_z_ = -1.0 * msg.pose.position.z;
+  pose_x_ = msg->pose.position.x;
+  pose_y_ = msg->pose.position.y;
+  pose_z_ = -1.0 * msg->pose.position.z;
 
   use_pose_ = true;
   use_vel_ = false;
 }
 
-void TrajectoryPlanner::velCallback(const geometry_msgs::msg::TwistStamped& msg)
+void TrajectoryPlanner::velCallback(const geometry_msgs::msg::TwistStamped::SharedPtr msg)
 {
-  vel_x_ = msg.twist.linear.x;
-  vel_y_ = msg.twist.linear.y;
-  vel_z_ = msg.twist.linear.z;
+  vel_x_ = msg->twist.linear.x;
+  vel_y_ = msg->twist.linear.y;
+  vel_z_ = msg->twist.linear.z;
 
   use_vel_ = true;
   use_pose_ = false;
