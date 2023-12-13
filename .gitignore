@@ -2,3 +2,4 @@ build/
 install/
 log/
 src/turtlebot3_simulations
+src/pixhawk/px4_msgs
