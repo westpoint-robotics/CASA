@@ -24,7 +24,7 @@ def generate_launch_description():
                     executable = 'allocator_node.py',
                     parameters = [{'sys_id': i,
                                    'threshold': 3.0,
-                                   'path': 'casa_ws/src/control/dot/tasks/'}])
+                                   'path': 'casa_ws/src/CASA/control/dot/tasks/'}])
         
         ld.add_action(node)
 
