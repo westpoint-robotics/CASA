@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(rrc_px4_mocap)
+project(casa_px4_mocap)
 
 # Default to C99
 if(NOT CMAKE_C_STANDARD)
@@ -18,37 +18,39 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(builtin_interfaces REQUIRED)
-find_package(eigen3_cmake_module REQUIRED)
-find_package(Eigen3 REQUIRED)
-find_package(geometry_msgs REQUIRED)
-find_package(px4_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(sensor_msgs REQUIRED)
-find_package(tf2 REQUIRED)
+find_package(px4_msgs REQUIRED)
+find_package(std_msgs REQUIRED)
 
 
-add_executable(mocap_to_px4 ./src/mocap_to_px4.cpp)
-ament_target_dependencies(mocap_to_px4 rclcpp px4_msgs geometry_msgs)
+#add_executable(mocap_to_px4 ./src/mocap_to_px4.cpp)
+#ament_target_dependencies(mocap_to_px4 rclcpp px4_msgs geometry_msgs)
+#install(TARGETS
+#        mocap_to_px4
+#        DESTINATION lib/${PROJECT_NAME})
+#
+#add_executable(px4_dds_sub ./src/px4_dds_sub.cpp)
+#ament_target_dependencies(px4_dds_sub rclcpp px4_msgs)
+#install(TARGETS
+#        px4_dds_sub
+#        DESTINATION lib/${PROJECT_NAME})
+
+#add_executable(rrc_offboard_test ./src/rrc_offboard_test.cpp)
+#ament_target_dependencies(rrc_offboard_test rclcpp px4_msgs)
+#install(TARGETS
+#        rrc_offboard_test
+#        DESTINATION lib/${PROJECT_NAME})
+
+add_executable(casa_flight_mode src/casa_flight_mode.cpp)
+ament_target_dependencies(casa_flight_mode rclcpp px4_msgs std_msgs)
 install(TARGETS
-        mocap_to_px4
+        casa_flight_mode
         DESTINATION lib/${PROJECT_NAME})
 
-add_executable(px4_dds_sub ./src/px4_dds_sub.cpp)
-ament_target_dependencies(px4_dds_sub rclcpp px4_msgs)
+add_executable(casa_task_update src/casa_task_update.cpp)
+ament_target_dependencies(casa_task_update rclcpp std_msgs)
 install(TARGETS
-        px4_dds_sub
-        DESTINATION lib/${PROJECT_NAME})
-
-add_executable(rrc_offboard_test ./src/rrc_offboard_test.cpp)
-ament_target_dependencies(rrc_offboard_test rclcpp px4_msgs)
-install(TARGETS
-        rrc_offboard_test
-        DESTINATION lib/${PROJECT_NAME})
-
-add_executable(rrc_flight_mode ./src/rrc_flight_mode.cpp)
-ament_target_dependencies(rrc_flight_mode rclcpp px4_msgs std_msgs)
-install(TARGETS
-        rrc_flight_mode
+        casa_task_update
         DESTINATION lib/${PROJECT_NAME})
 
 ament_export_dependencies(ament_cmake rclcpp px4_msgs geometry_msgs sensor_msgs)
