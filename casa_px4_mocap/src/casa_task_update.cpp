@@ -46,14 +46,11 @@ private:
         task_update_vehicle_pub->publish(task_update_vehicle_msg);
         task_update_num_pub->publish(task_update_num_msg);
 
-//        task_update_num_input = 100;
 //        task_update_vehicle_input = 0;
 //
 //        task_update_vehicle_msg.data = task_update_vehicle_input;
-//        task_update_num_msg.data = task_update_num_input;
 //
 //        task_update_vehicle_pub->publish(task_update_vehicle_msg);
-//        task_update_num_pub->publish(task_update_num_msg);
 
     }
 
