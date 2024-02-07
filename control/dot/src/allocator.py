@@ -68,7 +68,6 @@ class DOTAllocator(Node):
         self.task_update_num_sub = self.create_subscription(Int64, "/casa/task_update_num",
                                                             self.updateTaskCallback,
                                                             10)
-
         ## Publishers
 
         self.task_publisher_ = self.create_publisher(PoseStamped,
@@ -78,6 +77,9 @@ class DOTAllocator(Node):
         self.task_iter_publisher_ = self.create_publisher(Int32,
                                                           topic_namespace+"/internal/task_number",
                                                           qos)
+
+        self.task_color_pub = self.create_publisher(Int64, "/casa/color_pub",
+                                                    10)
 
         self.timer_ = self.create_timer(0.1, self.cycleCallback)
 
@@ -115,6 +117,7 @@ class DOTAllocator(Node):
         self.num_tasks_ = 0
         self.num_agents_ = 0
         self.counter_ = 0
+        self.init_counter_ = 0
 
         self.updated_agent = 0
         self.updated_task = 100
@@ -125,9 +128,6 @@ class DOTAllocator(Node):
         self.loaded_files_ = list()
         user = os.getlogin()
         self.path_ = "/home/" + user + "/"+self.path_
-        #coords = self.loadTaskLocations()
-        #self.taskCoordsToUtmAndLocal(coords)
-        #self.assignTask()
 
 
     def localCallback(self, msg):
@@ -158,11 +158,14 @@ class DOTAllocator(Node):
     def taskArrayCallback(self, msg):
         for task in msg.system_tasks:
             self.system_tasks_[task.sys_id] = task.assigned_task
-        #self.deleteTasks()
+        self.init_counter_ += 1
+        # self.get_logger().info("%s Counter %s" %(self.system_tasks_.values(), self.init_counter_))
+
+    #self.deleteTasks()
 
     def updateVehicleCallback(self, msg):
         self.updated_agent = msg.data
-        self.get_logger().info("updated {} agents ".format(self.updated_agent))
+        # self.get_logger().info("updated {} agents ".format(self.updated_agent))
 
     def updateTaskCallback(self, msg):
         self.updated_task = msg.data
@@ -232,8 +235,6 @@ class DOTAllocator(Node):
             self.master_tasks_[self.num_tasks_] = (x,y)
             self.num_tasks_ += 1
 
-        # log_message = "Contents of self.task_local_poses_ before: %s" % self.master_tasks_
-        # self.get_logger().info(log_message)
 
     def publishTask(self, task, task_iter):
         # publish the task coordinates in the local frame 
@@ -261,7 +262,11 @@ class DOTAllocator(Node):
 
         self.task_iter_publisher_.publish(msg)
 
+    def colorPub(self, task_num):
+        msg = Int64()
+        msg.data = task_num
 
+        self.task_color_pub.publish(msg)
     def feedbackLoop(self, task):
         #function to check if the agent is near its
         current_pose = [self.my_pose_.x, self.my_pose_y]
@@ -287,10 +292,32 @@ class DOTAllocator(Node):
     def getTaskIter(self, ind):
         return list(self.master_tasks_.keys())[list(self.master_tasks_.values()).index(ind)]
 
+    def initialTasks(self):
+        # self.completed_tasks_.append(self.current_task)
+
+        for ag,ag_task in zip(self.system_tasks_.keys(), self.system_tasks_.values()):
+            self.completed_tasks_.append(ag_task)
+
+        self.task_utm_poses_ = list(self.task_utm_poses_dict_.values())
+        self.task_local_poses_ = list(self.task_local_poses_dict_.values())
+
+        completed_task_list = self.completed_tasks_[:]
+
+        for task in completed_task_list:
+            a = self.task_utm_poses_dict_[task]
+            b = self.task_local_poses_dict_[task]
+
+            ind1 = self.task_utm_poses_.index(a)
+            ind2 = self.task_local_poses_.index(b)
+
+            self.task_utm_poses_.pop(ind1)
+            self.task_local_poses_.pop(ind2)
+
+        log_message = "Initial Completed list: %s" % self.completed_tasks_
+        self.get_logger().info(log_message)
 
     def deleteSysTasks(self):
-
-        # log_message = "Contents of prev_task before: %s" % self.prev_task
+        # log_message = "Contents of prev_task before: %s and agent %s task %s" % (self.prev_task, self.updated_agent, self.current_task)
         # self.get_logger().info(log_message)
         for ag,ag_task in zip(self.system_tasks_.keys(), self.system_tasks_.values()):
             # self.get_logger().info("agent %s checks agent %s going to task %s," %(self.sys_id_, ag, ag_task))
@@ -307,19 +334,27 @@ class DOTAllocator(Node):
                     self.task_local_poses_.pop(ind)
                     self.task_utm_poses_.pop(ind)
                     self.completed_tasks_.append(ag_task)
-            elif ag == self.updated_agent and self.prev_task[ag] != ag_task:
+                    # log_message = "Contents of completed_tasks_ after deleting: %s" % self.completed_tasks_
+                    # self.get_logger().info(log_message)
+                self.prev_task[ag] = ag_task
+            elif ag == self.updated_agent and self.prev_task[ag] != self.updated_task and self.updated_task !=100:
                 ag_current_task_index = self.completed_tasks_.index(self.prev_task[ag])
                 self.completed_tasks_.remove(self.prev_task[ag])
                 task_local = self.task_local_poses_dict_[self.updated_task]
 
                 master_task_index = self.getTaskIter(task_local)
                 self.completed_tasks_.insert(ag_current_task_index, master_task_index)
-                self.current_task = master_task_index
 
                 self.task_utm_poses_ = list(self.task_utm_poses_dict_.values())
                 self.task_local_poses_ = list(self.task_local_poses_dict_.values())
 
                 completed_task_list = self.completed_tasks_[:]
+                filtered_list = []
+                for item in completed_task_list:
+                    if item not in filtered_list:
+                        filtered_list.append(item)
+
+                completed_task_list = filtered_list
 
                 for task in completed_task_list:
                     a = self.task_utm_poses_dict_[task]
@@ -331,10 +366,10 @@ class DOTAllocator(Node):
                     self.task_utm_poses_.pop(ind1)
                     self.task_local_poses_.pop(ind2)
 
-                self.get_logger().info("agent %s sees agent %s going to updated_task %s, deleting" %(self.sys_id_, ag, self.updated_task))
-
-            self.updated_agent = 0
-            self.prev_task[ag] = ag_task
+                # self.get_logger().info("agent %s sees agent %s going to updated_task %s, deleting" %(self.sys_id_, ag, self.updated_task))
+                # log_message = "Contents of completed_tasks_ after deleting update: %s" % self.completed_tasks_
+                # self.get_logger().info(log_message)
+                self.prev_task[ag] = self.updated_task
 
         # log_message = "Contents of prev_task after: %s" % self.prev_task
         # self.get_logger().info(log_message)
@@ -342,10 +377,10 @@ class DOTAllocator(Node):
     def assignTask(self):
         # optimize                                                                                   
         # create a distance matrix between all agents and all tasks                                 
-        self.first_assign_ = True
+        # self.first_assign_ = True
 
         if len(self.task_utm_poses_) == 0:
-            self.get_logger().info("No tasks in queue, returning home")
+            self.get_logger().info("No tasks in queue")
             self.going_home_ = True
             return 0
 
@@ -392,14 +427,10 @@ class DOTAllocator(Node):
         # self.get_logger().info("task_local_poses_ len %s 2 " %(len(self.task_local_poses_)))
 
     def assignTaskUpdate(self):
-        # optimize
-        # create a distance matrix between all agents and all tasks
-        if self.updated_task == 30:
-            self.going_home_ = True
-        else:
-            self.going_home_ = False
 
         self.first_assign_ = True
+        log_message = "New list before: %s, task %s" % (self.completed_tasks_, self.current_task)
+        self.get_logger().info(log_message)
         current_task_index = self.completed_tasks_.index(self.current_task)
         self.completed_tasks_.remove(self.current_task)
 
@@ -414,6 +445,8 @@ class DOTAllocator(Node):
 
         #inform and publish
         self.get_logger().info("Agent %s updated task %s" %(self.sys_id_, master_task_index))
+        log_message = "New completed list: %s" % self.completed_tasks_
+        self.get_logger().info(log_message)
 
         self.publishTask((self.task_x_,self.task_y_), self.task_number_)
         self.publishTaskIter()
@@ -422,6 +455,12 @@ class DOTAllocator(Node):
         self.task_local_poses_ = list(self.task_local_poses_dict_.values())
 
         completed_task_list = self.completed_tasks_[:]
+        filtered_list = []
+        for item in completed_task_list:
+            if item not in filtered_list:
+                filtered_list.append(item)
+
+        completed_task_list = filtered_list
 
         for task in completed_task_list:
             a = self.task_utm_poses_dict_[task]
@@ -451,6 +490,7 @@ class DOTAllocator(Node):
                 # self.get_logger().info("Agent %s second assignment " %(self.sys_id_))
             else:
                 self.get_logger().info("Agent %s at task location, completeing task %s"%(self.sys_id_, self.current_task))
+                self.colorPub(self.current_task)
                 time.sleep(1.0)
                 self.get_logger().info("Agent %s Task completed, assigning new task" %(self.sys_id_))
                 self.deleteSysTasks()
@@ -459,23 +499,40 @@ class DOTAllocator(Node):
                 # self.get_logger().info("Agent %s third assignment " %(self.sys_id_))
         elif self.num_agents_ > 0 and self.my_utm_pose_[0] != 0:
             if self.first_assign_:
-                if self.updated_agent == self.sys_id_ and self.current_task != self.updated_task:
+                if self.updated_agent == self.sys_id_ and self.current_task != self.updated_task and self.updated_task !=100 and self.updated_task !=30:
                     self.assignTaskUpdate()
 
                 self.publishTask((self.task_x_,self.task_y_), self.task_number_)
                 self.publishTaskIter()
                 self.deleteSysTasks()
                 # self.get_logger().info("Agent %s first assignment " %(self.sys_id_))
+                # log_message = "Completed list: %s" % self.completed_tasks_
+                # self.get_logger().info(log_message)
             else:
                 if self.counter_ < 1:
-                    coords = self.loadTaskLocations()
-                    self.taskCoordsToUtmAndLocal(coords)
-                    self.assignTask()
-                    self.counter_ += 1
-                    self.get_logger().info("Agent %s initial assignment " %(self.sys_id_))
+                    if self.counter_ == 0:
+                        coords = self.loadTaskLocations()
+                        self.taskCoordsToUtmAndLocal(coords)
+                        self.assignTask()
+                        self.counter_ = 0.5
+                    elif self.init_counter_ == 50:
+                        self.initialTasks()
+                        self.first_assign_ = True
+                        self.counter_ = 1
+                        self.get_logger().info("Agent %s initial assignment " %(self.sys_id_))
+                    # if self.init_counter_ <= 200:
+                    #     self.init_counter_ += 1
+                    # else:
+                    #     self.get_logger().info("Wait")
+                    #     time.sleep(5.0)
+                    #     self.initialTasks()
+                    # for i in range(100):
+                    #     self.first_assign_ = False
 
-        log_message = "Completed list: %s" % self.completed_tasks_
-        self.get_logger().info(log_message)
+                    # self.get_logger().info("Agent %s initial assignment " %(self.sys_id_))
+
+        # log_message = "Completed list: %s" % self.completed_tasks_
+        # self.get_logger().info(log_message)
 
 
         if self.counter_ >= 1:
