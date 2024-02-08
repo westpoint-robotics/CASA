@@ -61,7 +61,7 @@ public:
     gps_pub_ = this -> create_publisher<sensor_msgs::msg::NavSatFix>(internal_namespace_+"/internal/global_position", qos);
     heading_pub_ = this -> create_publisher<std_msgs::msg::Float32>(internal_namespace_+"/internal/heading", qos);
     
-    timer_ = this -> create_wall_timer(1000ms, std::bind(&PixhawkInterface::timerCallback, this));
+    timer_ = this -> create_wall_timer(100ms, std::bind(&PixhawkInterface::timerCallback, this));
 
   }
 

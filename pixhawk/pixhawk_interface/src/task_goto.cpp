@@ -10,6 +10,7 @@
 
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "std_msgs/msg/int64.hpp"
+#include "std_msgs/msg/int32.hpp"
 #include "px4_msgs/msg/offboard_control_mode.hpp"
 #include "px4_msgs/msg/vehicle_command.hpp"
 #include "px4_msgs/msg/trajectory_setpoint.hpp"
@@ -34,7 +35,7 @@ private:
     rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr task_sub_;
     rclcpp::Subscription<px4_msgs::msg::VehicleStatus>::SharedPtr status_sub_;
     rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr pose_sub_;
-    rclcpp::Subscription<std_msgs::msg::Int64>::SharedPtr flight_mode_subscriber_;
+    rclcpp::Subscription<std_msgs::msg::Int32>::SharedPtr flight_mode_subscriber_;
 
     rclcpp::TimerBase::SharedPtr timer_;
 
@@ -49,7 +50,7 @@ private:
     void taskCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg);
     void statusCallback(const px4_msgs::msg::VehicleStatus::SharedPtr msg);
     void poseCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg);
-    void flight_mode_callback(const std_msgs::msg::Int64::SharedPtr msg);
+    void flight_mode_callback(const std_msgs::msg::Int32::SharedPtr msg);
 
     void publishControlMode();
     void publishTrajectory();
@@ -101,7 +102,7 @@ GoToTask::GoToTask() : Node("goto_task")
                                                                              std::bind(&GoToTask::poseCallback,
                                                                                        this,
                                                                                        std::placeholders::_1));
-    flight_mode_subscriber_ = this->create_subscription<std_msgs::msg::Int64>("/fmu/flight_mode",10,
+    flight_mode_subscriber_ = this->create_subscription<std_msgs::msg::Int32>("/fmu/flight_mode",10,
                                                                               std::bind(&GoToTask::flight_mode_callback,
                                                                                         this, std::placeholders::_1));
 
@@ -131,7 +132,7 @@ GoToTask::GoToTask() : Node("goto_task")
     timer_ = this -> create_wall_timer(10ms, cycleCallback);
 }
 
-void GoToTask::flight_mode_callback(const std_msgs::msg::Int64::SharedPtr msg){
+void GoToTask::flight_mode_callback(const std_msgs::msg::Int32::SharedPtr msg){
 
     flight_mode = msg->data;
 }
@@ -189,7 +190,7 @@ void GoToTask::publishControlMode()
 void GoToTask::publishTrajectory()
 {
     px4_msgs::msg::TrajectorySetpoint msg;
-    msg.position = {task_x_in_, task_y_in_, -5.0};
+    msg.position = {task_x_in_, task_y_in_, -1.3};
 //    msg.velocity = {2.0,2.0,2.0};
     msg.yaw = calculateHeading();
     msg.timestamp = this -> get_clock() -> now().nanoseconds()/1000;
@@ -200,7 +201,7 @@ void GoToTask::publishTrajectory()
 void GoToTask::publishTrajectory2()
 {
     px4_msgs::msg::TrajectorySetpoint msg;
-    msg.position = {0, 0, -10.0};
+    msg.position = {0, 0, -2.0};
 //    msg.yaw = calculateHeading();
     msg.timestamp = this -> get_clock() -> now().nanoseconds()/1000;
     // TODO: calculate heading in radians

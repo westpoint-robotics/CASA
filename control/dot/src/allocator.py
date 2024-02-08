@@ -62,10 +62,10 @@ class DOTAllocator(Node):
         self.system_tasks_sub = self.create_subscription(CasaTaskArray, topic_namespace+"/internal/system_tasks",
                                                          self.taskArrayCallback,
                                                          qos)
-        self.task_update_vehicle_sub = self.create_subscription(Int64, "/casa/task_update_vehicle",
+        self.task_update_vehicle_sub = self.create_subscription(Int32, "/casa/task_update_vehicle",
                                                                 self.updateVehicleCallback,
                                                                 10)
-        self.task_update_num_sub = self.create_subscription(Int64, "/casa/task_update_num",
+        self.task_update_num_sub = self.create_subscription(Int32, "/casa/task_update_num",
                                                             self.updateTaskCallback,
                                                             10)
         ## Publishers
@@ -78,7 +78,7 @@ class DOTAllocator(Node):
                                                           topic_namespace+"/internal/task_number",
                                                           qos)
 
-        self.task_color_pub = self.create_publisher(Int64, "/casa/color_pub",
+        self.task_color_pub = self.create_publisher(Int32, "/casa/color_pub",
                                                     10)
 
         self.timer_ = self.create_timer(0.1, self.cycleCallback)
@@ -235,6 +235,9 @@ class DOTAllocator(Node):
             self.master_tasks_[self.num_tasks_] = (x,y)
             self.num_tasks_ += 1
 
+        # log_message = "Task local point area: %s" % self.task_local_poses_dict_
+        # self.get_logger().info(log_message)
+
 
     def publishTask(self, task, task_iter):
         # publish the task coordinates in the local frame 
@@ -263,7 +266,7 @@ class DOTAllocator(Node):
         self.task_iter_publisher_.publish(msg)
 
     def colorPub(self, task_num):
-        msg = Int64()
+        msg = Int32()
         msg.data = task_num
 
         self.task_color_pub.publish(msg)
@@ -535,9 +538,9 @@ class DOTAllocator(Node):
         # self.get_logger().info(log_message)
 
 
-        if self.counter_ >= 1:
-            coords = self.loadTaskLocations()
-            self.taskCoordsToUtmAndLocal(coords)
+        # if self.counter_ >= 1:
+        #     coords = self.loadTaskLocations()
+        #     self.taskCoordsToUtmAndLocal(coords)
 
 
             
